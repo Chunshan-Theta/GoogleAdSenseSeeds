@@ -12,6 +12,7 @@ interface SocialShareProps {
 }
 
 type ShareTarget = 'facebook' | 'x' | 'line';
+const COPY_FEEDBACK_DURATION = 2000;
 
 const SHARE_LABELS: Record<ShareTarget, string> = {
   facebook: 'Facebook',
@@ -29,7 +30,7 @@ export default function SocialShare({
 }: SocialShareProps) {
   const [currentUrl, setCurrentUrl] = useState(url ?? '');
   const [copied, setCopied] = useState(false);
-  const copiedTimeoutRef = useRef<number | null>(null);
+  const copiedTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
 
   useEffect(() => {
     if (url) {
@@ -88,7 +89,7 @@ export default function SocialShare({
       copiedTimeoutRef.current = window.setTimeout(() => {
         setCopied(false);
         copiedTimeoutRef.current = null;
-      }, 2000);
+      }, COPY_FEEDBACK_DURATION);
     } catch {
       setCopied(false);
     }

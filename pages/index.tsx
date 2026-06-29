@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import Head from 'next/head';
+import SocialShare from '../components/SocialShare';
 
 // ─── Feedback text arrays (raw text, no A/B/C prefix) ────────────
 const textQ2 = [
@@ -253,6 +254,7 @@ export default function Home() {
 
   const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || '現狀與幸福量表';
   const siteDesc = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || '全面檢視您的財務思維與人生平衡';
+  const shareText = '一起用這份量表檢視資產階段、幸福指數與目前最該調整的方向。';
 
   const setAnswer = (name: string, value: number) => {
     setAnswers((prev) => ({ ...prev, [name]: value }));
@@ -302,6 +304,7 @@ export default function Home() {
       <div className="container">
         <h1>{siteTitle}</h1>
         <p className="subtitle">{siteDesc}</p>
+        <SocialShare title={siteTitle} text={shareText} />
 
         <div className="notice">
           💡

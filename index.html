@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>現狀與幸福量表</title>
+    <style>
+        /* 無印良品 (MUJI) 極簡風格設定 */
+        :root {
+            --bg-color: #FAFAFA;
+            --text-main: #333333;
+            --text-light: #666666;
+            --border-color: #E0E0E0;
+            --accent-color: #7A7065; 
+            --accent-hover: #5F564D;
+            --bg-card: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang TC', '微軟正黑體', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            padding: 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+
+        .notice {
+            background-color: #F5F5F5;
+            padding: 15px 20px;
+            border-left: 4px solid var(--accent-color);
+            font-size: 14.5px;
+            color: var(--text-main);
+            margin-bottom: 40px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 500;
+            border-bottom: 2px solid var(--text-main);
+            padding-bottom: 10px;
+            margin-top: 40px;
+            margin-bottom: 25px;
+        }
+
+        .question {
+            margin-bottom: 40px;
+        }
+
+        .question-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            color: #111;
+        }
+
+        /* 選項區塊樣式 */
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-label {
+            display: block;
+            padding: 15px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            position: relative;
+            background-color: #FFF;
+        }
+
+        .option-label:hover {
+            border-color: var(--accent-color);
+            background-color: #FDFDFD;
+        }
+
+        .option-label input[type="radio"] {
+            display: none; 
+        }
+
+        /* 互動反饋：選中狀態 */
+        .option-label.selected {
+            border-color: var(--accent-color);
+            background-color: var(--accent-color);
+            color: #FFFFFF;
+        }
+
+        /* 送出按鈕 */
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: var(--text-main);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 50px;
+            letter-spacing: 2px;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        /* 結果展示區塊 */
+        #result-section {
+            display: none;
+            margin-top: 50px;
+            padding: 40px;
+            background-color: #F7F7F7;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 4px;
+        }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 25px;
+            color: var(--text-main);
+            text-align: center;
+        }
+
+        .result-item {
+            background: #FFF;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .result-item-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .standard-box {
+            background-color: #F0F4F2;
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #333;
+            border-left: 3px solid #4A7A59;
+        }
+
+        .advice-box {
+            font-size: 14.5px;
+            color: #444;
+            line-height: 1.7;
+        }
+
+        .status-lag { color: #A34C4C; font-weight: bold;} 
+        .status-lead { color: #D48A44; font-weight: bold;} 
+        .status-match { color: #4A7A59; font-weight: bold;} 
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>現狀與幸福量表</h1>
+    <p class="subtitle">全面檢視您的財務思維與人生平衡</p>
+
+    <div class="notice">
+        💡 填寫提示：在第一部分的作答中，請仔細閱讀所有選項，並盡可能往下選擇您目前能達到的「最高」或「最寬裕」的狀態，這將幫助系統為您定位最真實的財富階段。
+    </div>
+
+    <form id="wealthForm">
+        
+        <!-- 第一部分：檢測目前資產階段 -->
+        <div class="section-title">第一部分：檢測目前資產階段</div>
+
+        <div class="question">
+            <div class="question-title">1. 您的淨資產範圍大約落在以下哪個區間？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="q1" value="1"> A. 不到 30 萬台幣</label>
+                <label class="option-label"><input type="radio" name="q1" value="2"> B. 台幣 30 萬到 300 萬</label>
+                <label class="option-label"><input type="radio" name="q1" value="3"> C. 台幣 300 萬到 3 千萬</label>
+                <label class="option-label"><input type="radio" name="q1" value="4"> D. 台幣 3 千萬到 3 億</label>
+                <label class="option-label"><input type="radio" name="q1" value="5"> E. 台幣 3 億到 30 億</label>
+                <label class="option-label"><input type="radio" name="q1" value="6"> F. 台幣 30 億以上</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-title">2. 在日常消費與生活狀態中，您目前最符合哪一種自由程度？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="q2" value="1"> A. 容錯率低，意外生病或請假可能導致收入中斷、影響生活。</label>
+                <label class="option-label"><input type="radio" name="q2" value="2"> B. 去超市不需對每一項斤斤計較，多買點日用品不會覺得有負擔。</label>
+                <label class="option-label"><input type="radio" name="q2" value="3"> C. 去餐廳點餐不會完全被價格綁架，不會每點一道菜就心痛。</label>
+                <label class="option-label"><input type="radio" name="q2" value="4"> D. 可自由花錢買體驗或旅行、住好飯店，不輕易被價格勸退。</label>
+                <label class="option-label"><input type="radio" name="q2" value="5"> E. 能輕鬆買到理想中的房子，住宅選擇不再是人生限制。</label>
+                <label class="option-label"><input type="radio" name="q2" value="6"> F. 金錢成為影響世界、改變產業或支持研究的工具。</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-title">3. 您現階段最需要專注的主線任務是什麼？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="q3" value="1"> A. 提高收入、處理債務、建立能應付意外的基本緊急預備金。</label>
+                <label class="option-label"><input type="radio" name="q3" value="2"> B. 投資自己的技能，尋找專長與市場需求的交集，以提高主動收入。</label>
+                <label class="option-label"><input type="radio" name="q3" value="3"> C. 讓錢幫你賺錢，買進生財資產並持續投入，避免生活膨脹太快。</label>
+                <label class="option-label"><input type="radio" name="q3" value="4"> D. 尋找槓桿以突破單靠薪水與一般投資的瓶頸。</label>
+                <label class="option-label"><input type="radio" name="q3" value="5"> E. 保護現有財富，處理因財富變多產生的新問題。</label>
+                <label class="option-label"><input type="radio" name="q3" value="6"> F. 建立某種長期存在，甚至在離開之後都會持續運作的影響力事物。</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-title">4. 面對日常支出，當您花費一筆金錢時，以下哪個金額是您完全不需感到焦慮或罪惡的上限？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="q4" value="1"> A. 100 元台幣以內</label>
+                <label class="option-label"><input type="radio" name="q4" value="2"> B. 300 元台幣以內</label>
+                <label class="option-label"><input type="radio" name="q4" value="3"> C. 3,000 元台幣以內</label>
+                <label class="option-label"><input type="radio" name="q4" value="4"> D. 30,000 元台幣以內</label>
+                <label class="option-label"><input type="radio" name="q4" value="5"> E. 300,000 元台幣以內</label>
+                <label class="option-label"><input type="radio" name="q4" value="6"> F. 日常花費數字對我已無實質意義，完全不會為了消費金額焦慮。</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-title">5. 面對增加收入與時間分配的抉擇，當有新的賺錢機會出現時，您當前的決策直覺最符合哪一項？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="q5" value="1"> A. 為了多賺 1,000 元，我願意投入半天以上的勞力或兼差。</label>
+                <label class="option-label"><input type="radio" name="q5" value="2"> B. 我願意花費時間接案或加班，以換取數千元的額外收入。</label>
+                <label class="option-label"><input type="radio" name="q5" value="3"> C. 若新收入無法帶來數萬元的進帳，我不會輕易出賣寶貴的時間。</label>
+                <label class="option-label"><input type="radio" name="q5" value="4"> D. 我只專注於能帶來數十萬以上回報的槓桿機會，拒絕零星低薪工作。</label>
+                <label class="option-label"><input type="radio" name="q5" value="5"> E. 我不再為微小比例的增長出賣時間，主要關注百萬級別以上的資產保護。</label>
+                <label class="option-label"><input type="radio" name="q5" value="6"> F. 我只將時間投入在能產生巨大社會影響力的決策上，不單純為賺錢工作。</label>
+            </div>
+        </div>
+
+        <!-- 第二部分：檢測幸福指數 -->
+        <div class="section-title">第二部分：檢測幸福指數</div>
+        <p style="font-size: 14.5px; color: var(--text-light); margin-bottom: 25px;">請根據具體指標，評估您在五大維度中的生活狀態：</p>
+
+        <div class="question">
+            <div class="question-title">1. 您的生活緊繃程度與選擇權如何？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="h1" value="1"> 1分：充滿壓力，連最基本的生活選擇都被剝奪，每天為生存焦慮。</label>
+                <label class="option-label"><input type="radio" name="h1" value="2"> 2分：勉強支撐，剛好能負擔生活，但遇到突發狀況就會陷入危機。</label>
+                <label class="option-label"><input type="radio" name="h1" value="3"> 3分：趨於穩定，度過了壓力最大的時期，但生活重心依然是想辦法賺錢。</label>
+                <label class="option-label"><input type="radio" name="h1" value="4"> 4分：餘裕調味，金錢像是調味料讓生活變得更好，擁有較多選擇權。</label>
+                <label class="option-label"><input type="radio" name="h1" value="5"> 5分：豐盛無憂，完全不需為錢煩惱，金錢不再是限制人生的任何阻礙。</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-title">2. 您的人際連結與親密關係健康嗎？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="h2" value="1"> 1分：孤立無援，0 個親密朋友，且與家人關係極差、充滿衝突。</label>
+                <label class="option-label"><input type="radio" name="h2" value="2"> 2分：關係疏離，僅有 1 到 2 位點頭之交，難以對人敞開心房。</label>
+                <label class="option-label"><input type="radio" name="h2" value="3"> 3分：基本社交，有 2 到 3 位可以偶爾談心的朋友，家庭關係普通。</label>
+                <label class="option-label"><input type="radio" name="h2" value="4"> 4分：穩定支持，有 3 到 4 位知心好友，與家人或伴侶關係良好和睦。</label>
+                <label class="option-label"><input type="radio" name="h2" value="5"> 5分：深度連結，擁有 5 位以上隨時能依靠的親密朋友，給予強大支持。</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-title">3. 您的內在成就感與生活動機穩定嗎？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="h3" value="1"> 1分：嚴重空虛，完全不知道每天前進的動力是什麼，感到極度迷茫。</label>
+                <label class="option-label"><input type="radio" name="h3" value="2"> 2分：仰賴外部，失去金錢壓力或外界推力後，就會喪失動機。</label>
+                <label class="option-label"><input type="radio" name="h3" value="3"> 3分：偶爾迷惘，大方向清楚，但有時會懷疑自己現在做的事情是否有意義。</label>
+                <label class="option-label"><input type="radio" name="h3" value="4"> 4分：目標明確，有穩定的成就感來源，知道自己現階段追求什麼。</label>
+                <label class="option-label"><input type="radio" name="h3" value="5"> 5分：內在富足，擁有強大且清晰的人生使命，充滿內在驅動力。</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-title">4. 在追求目標的過程中，您的健康狀況如何？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="h4" value="1"> 1分：嚴重透支，為賺錢犧牲健康，已造成不可逆的身體傷害或嚴重慢性病。</label>
+                <label class="option-label"><input type="radio" name="h4" value="2"> 2分：亮起紅燈，經常熬夜、疲勞，有明顯的身體小毛病但無暇理會。</label>
+                <label class="option-label"><input type="radio" name="h4" value="3"> 3分：狀態平平，無重大疾病，但缺乏運動，偶爾感到體力不濟。</label>
+                <label class="option-label"><input type="radio" name="h4" value="4"> 4分：注重保養，有固定的運動習慣與良好睡眠，身體狀態能支撐想做的事。</label>
+                <label class="option-label"><input type="radio" name="h4" value="5"> 5分：充滿活力，非常健康，妥善維護身心，擁有充沛的精力享受生活。</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-title">5. 您能完全掌控自己的時間分配嗎？</div>
+            <div class="options-group">
+                <label class="option-label"><input type="radio" name="h5" value="1"> 1分：身不由己，時間完全被綁架，把最好的時間都賣掉了，毫無個人餘裕。</label>
+                <label class="option-label"><input type="radio" name="h5" value="2"> 2分：勉強擠出，僅能在極短的下班或週末碎片時間做一點想做的事。</label>
+                <label class="option-label"><input type="radio" name="h5" value="3"> 3分：勞逸平衡，擁有一定的自由時間，但主要精華時段仍需受制於人或工作。</label>
+                <label class="option-label"><input type="radio" name="h5" value="4"> 4分：高度自主，能大幅度決定自己的行程，把大部分時間花在重視的事情上。</label>
+                <label class="option-label"><input type="radio" name="h5" value="5"> 5分：時間自由，百分之百掌控自己的日曆，能任意將時間投入真正熱愛的事物。</label>
+            </div>
+        </div>
+
+        <button type="button" class="submit-btn" id="submitBtn">送出並查看全方位對比分析</button>
+    </form>
+
+    <!-- 結果區塊 -->
+    <div id="result-section">
+        <div class="result-title">您的專屬評量與對比建議</div>
+        <div id="analysis-container"></div>
+    </div>
+</div>
+
+<script>
+    // 定義各題的標準文本陣列
+    const textQ2 = [
+        "容錯率低，意外生病或請假可能導致收入中斷、影響生活。",
+        "去超市不需對每一項斤斤計較，多買點日用品不會覺得有負擔。",
+        "去餐廳點餐不會完全被價格綁架，不會每點一道菜就心痛。",
+        "可自由花錢買體驗或旅行、住好飯店，不輕易被價格勸退。",
+        "能輕鬆買到理想中的房子，住宅選擇不再是人生限制。",
+        "金錢成為影響世界、改變產業或支持研究的工具。"
+    ];
+    
+    const textQ3 = [
+        "提高收入、處理債務、建立能應付意外的基本緊急預備金。",
+        "投資自己的技能，尋找專長與市場需求的交集，以提高主動收入。",
+        "讓錢幫你賺錢，買進生財資產並持續投入，避免生活膨脹太快。",
+        "尋找槓桿以突破單靠薪水與一般投資的瓶頸。",
+        "保護現有財富，處理因財富變多產生的新問題。",
+        "建立某種長期存在，甚至在離開之後都會持續運作的影響力事物。"
+    ];
+
+    const textQ4 = [
+        "100 元台幣以內",
+        "300 元台幣以內",
+        "3,000 元台幣以內",
+        "30,000 元台幣以內",
+        "300,000 元台幣以內",
+        "日常花費數字對我已無實質意義，完全不會為了消費金額焦慮。"
+    ];
+
+    const textQ5 = [
+        "為了多賺 1,000 元，我願意投入半天以上的勞力或兼差。",
+        "我願意花費時間接案或加班，以換取數千元的額外收入。",
+        "若新收入無法帶來數萬元的進帳，我不會輕易出賣寶貴的時間。",
+        "我只專注於能帶來數十萬以上回報的槓桿機會，拒絕零星低薪工作。",
+        "我不再為微小比例的增長出賣時間，主要關注百萬級別以上的資產保護。",
+        "我只將時間投入在能產生巨大社會影響力的決策上，不單純為賺錢工作。"
+    ];
+
+    // 視覺反饋邏輯
+    document.querySelectorAll('.option-label input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            let name = this.getAttribute('name');
+            document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                r.parentElement.classList.remove('selected');
+            });
+            this.parentElement.classList.add('selected');
+        });
+    });
+
+    // 送出與邏輯運算
+    document.getElementById('submitBtn').addEventListener('click', function() {
+        const totalQuestions = 10; 
+        let answeredCount = document.querySelectorAll('input[type="radio"]:checked').length;
+        
+        if(answeredCount < totalQuestions) {
+            alert("請完成所有（共10題）選項後，再查看分析建議喔！");
+            return;
+        }
+
+        let q1 = parseInt(document.querySelector('input[name="q1"]:checked').value);
+        let q2 = parseInt(document.querySelector('input[name="q2"]:checked').value); 
+        let q3 = parseInt(document.querySelector('input[name="q3"]:checked').value); 
+        let q4 = parseInt(document.querySelector('input[name="q4"]:checked').value); 
+        let q5 = parseInt(document.querySelector('input[name="q5"]:checked').value); 
+
+        let h1 = parseInt(document.querySelector('input[name="h1"]:checked').value);
+        let h2 = parseInt(document.querySelector('input[name="h2"]:checked').value);
+        let h3 = parseInt(document.querySelector('input[name="h3"]:checked').value);
+        let h4 = parseInt(document.querySelector('input[name="h4"]:checked').value);
+        let h5 = parseInt(document.querySelector('input[name="h5"]:checked').value);
+        let totalHappiness = h1 + h2 + h3 + h4 + h5;
+
+        let htmlContent = `<p style="font-size: 15px; margin-bottom: 25px;">系統已將您的<strong>淨資產階層</strong>作為基準，為您逐一比對各項思維是否合乎當前資產狀態。</p>`;
+
+        // 輔助函式：產生先顯示標準，再顯示建議的 HTML
+        function generateFeedback(title, baseVal, userVal, standardArray, lagAdv, leadAdv, matchAdv) {
+            let standardText = standardArray[baseVal - 1];
+            let userText = standardArray[userVal - 1];
+            
+            let statusHTML = "";
+            if (userVal < baseVal) {
+                statusHTML = `<span class="status-lag">⚠️ 您的選擇：${userText}<br>建議：${lagAdv}</span>`;
+            } else if (userVal > baseVal) {
+                statusHTML = `<span class="status-lead">⚠️ 您的選擇：${userText}<br>建議：${leadAdv}</span>`;
+            } else {
+                statusHTML = `<span class="status-match">✅ 您的選擇與資產階段完美吻合。<br>建議：${matchAdv}</span>`;
+            }
+
+            return `
+                <div class="result-item">
+                    <div class="result-item-title">${title}</div>
+                    <div class="standard-box">
+                        <strong>合乎資產標準的結果應為：</strong><br>${standardText}
+                    </div>
+                    <div class="advice-box">
+                        ${statusHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 產生各題比對
+        htmlContent += generateFeedback(
+            "【日常自由度比對】", q1, q2, textQ2,
+            "您的生活品質或心態仍停留在過去的恐懼中。請適度放寬心，學習享受辛苦累積的財富，不用再對生活中的小麻煩過度焦慮。",
+            "您的消費自由度超前了資產水準。請小心生活膨脹的速度是否超過了資產成長的速度，這會讓您的財務狀況變得脆弱。",
+            "您對生活的掌控感與您的資產規模非常相符，請繼續保持健康的消費觀。"
+        );
+
+        htmlContent += generateFeedback(
+            "【主線任務比對】", q1, q3, textQ3,
+            "您正花費心力在過往階段的任務上。這會導致您卡在此階層無法突破，請更新您的策略，專注於當前階段最該做的事。",
+            "您似乎正在嘗試越級打怪。在沒有穩固基礎的情況下過早追求高槓桿或影響力，可能會因為地基不穩而承受過高風險。",
+            "您非常清楚現階段最該做的事，這能確保您以最有效率的方式穩步前進。"
+        );
+
+        htmlContent += generateFeedback(
+            "【支出思維比對】", q1, q4, textQ4,
+            "您仍在為不該焦慮的小錢感到罪惡。許多人在資產成長後卡住，就是被以前靠省錢度過低潮的舊思維綁住。請適度放寬日常消費的容忍度，把精力留給更重要的決策。",
+            "對於您目前的資產水位來說，這樣的支出習慣可能過度膨脹。建議稍微收緊，別用更高階層的標準來合理化自己的開銷。",
+            "您對於多少錢算大錢、多少錢算小錢的拿捏非常精準，能理性消費而不過度焦慮。"
+        );
+
+        htmlContent += generateFeedback(
+            "【收入與時間思維比對】", q1, q5, textQ5,
+            "您的時間價值已經提升，但仍習慣出賣便宜的時間去換取微小的收入。舊的方法無法帶您跨入新階級，學會拒絕低效收入，尋找槓桿！",
+            "您可能眼高手低了。在您目前的資產階段，那些看似微薄的收入其實對累積本金仍有實質幫助，切勿過早追求不切實際的巨大回報。",
+            "您非常了解自己的機會成本，不會隨便為小錢賣命，也不會錯失該賺的錢。"
+        );
+
+        // 幸福指數
+        let happinessText = "";
+        let avgH = totalHappiness / 5;
+        if(avgH < 3) {
+            happinessText = `<span class="status-lag">🚨 幸福指數偏低 (總分 ${totalHappiness}/25)</span><br>您的健康、人際或時間財富處於匱乏狀態。如果本來就空虛孤立，錢只會把問題放大。強烈建議您暫停腳步，停止為了賺錢犧牲無法買回的健康與人際關係。`;
+        } else if (avgH < 4.2) {
+            happinessText = `<span class="status-lead">⚖️ 幸福指數中等 (總分 ${totalHappiness}/25)</span><br>您的生活處於動態平衡，但可能在某些無形的維度上仍有欠缺。請檢視是否有單一項目低於 3 分，填補它會比帳面數字增加帶來更多的快樂。`;
+        } else {
+            happinessText = `<span class="status-match">🌟 幸福指數極佳 (總分 ${totalHappiness}/25)</span><br>恭喜您！您不僅在累積帳面的數字，更掌握了人生最重要的社會、心理、身體與時間財富，活出了真正的豐盛。`;
+        }
+
+        htmlContent += `
+            <div class="result-item" style="border-left: 4px solid var(--accent-color);">
+                <div class="result-item-title" style="border:none; margin-bottom:5px;">【綜合幸福財富評估】</div>
+                <div style="font-size: 14.5px; color: #444; line-height:1.8;">${happinessText}</div>
+            </div>
+        `;
+
+        document.getElementById('analysis-container').innerHTML = htmlContent;
+        document.getElementById('result-section').style.display = 'block';
+        document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+    });
+</script>
+
+</body>
+</html>

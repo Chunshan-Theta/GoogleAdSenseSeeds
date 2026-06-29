@@ -61,7 +61,7 @@ export default function SocialShare({
   const shareUrls = useMemo(
     () => ({
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-      x: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
+      x: `https://x.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
       line: `https://social-plugins.line.me/lineit/share?url=${encodedUrl}`,
     }),
     [encodedText, encodedUrl]

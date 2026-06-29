@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface SocialShareProps {
   title: string;
@@ -29,6 +29,7 @@ export default function SocialShare({
 }: SocialShareProps) {
   const [currentUrl, setCurrentUrl] = useState(url ?? '');
   const [copied, setCopied] = useState(false);
+  const copiedTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (url) {
@@ -40,6 +41,14 @@ export default function SocialShare({
       setCurrentUrl(window.location.href);
     }
   }, [url]);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current !== null) {
+        window.clearTimeout(copiedTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const shareText = text?.trim() || title;
   const encodedUrl = encodeURIComponent(currentUrl);
@@ -73,7 +82,13 @@ export default function SocialShare({
     try {
       await navigator.clipboard.writeText(currentUrl);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      if (copiedTimeoutRef.current !== null) {
+        window.clearTimeout(copiedTimeoutRef.current);
+      }
+      copiedTimeoutRef.current = window.setTimeout(() => {
+        setCopied(false);
+        copiedTimeoutRef.current = null;
+      }, 2000);
     } catch {
       setCopied(false);
     }

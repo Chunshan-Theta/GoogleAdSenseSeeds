@@ -255,7 +255,7 @@ export default function Home() {
   const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || '現狀與幸福量表';
   const siteDesc = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || '全面檢視您的財務思維與人生平衡';
   const shareText = '一起用這份量表檢視資產階段、幸福指數與目前最該調整的方向。';
-  const shareDescription = '把這份量表分享給朋友，也保留未來嵌入其他頁面的彈性。';
+  const shareModuleDescription = '把這份量表分享給朋友，也保留未來嵌入其他頁面的彈性。';
 
   const setAnswer = (name: string, value: number) => {
     setAnswers((prev) => ({ ...prev, [name]: value }));
@@ -305,7 +305,7 @@ export default function Home() {
       <div className="container">
         <h1>{siteTitle}</h1>
         <p className="subtitle">{siteDesc}</p>
-        <SocialShare title={siteTitle} text={shareText} description={shareDescription} />
+        <SocialShare title={siteTitle} text={shareText} description={shareModuleDescription} />
 
         <div className="notice">
           💡

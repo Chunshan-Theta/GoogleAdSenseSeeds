@@ -30,7 +30,7 @@ export default function SocialShare({
 }: SocialShareProps) {
   const [currentUrl, setCurrentUrl] = useState(url ?? '');
   const [copied, setCopied] = useState(false);
-  const copiedTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (url) {
@@ -46,7 +46,7 @@ export default function SocialShare({
   useEffect(() => {
     return () => {
       if (copiedTimeoutRef.current !== null) {
-        window.clearTimeout(copiedTimeoutRef.current);
+        clearTimeout(copiedTimeoutRef.current);
       }
     };
   }, []);
@@ -84,9 +84,9 @@ export default function SocialShare({
       await navigator.clipboard.writeText(currentUrl);
       setCopied(true);
       if (copiedTimeoutRef.current !== null) {
-        window.clearTimeout(copiedTimeoutRef.current);
+        clearTimeout(copiedTimeoutRef.current);
       }
-      copiedTimeoutRef.current = window.setTimeout(() => {
+      copiedTimeoutRef.current = setTimeout(() => {
         setCopied(false);
         copiedTimeoutRef.current = null;
       }, COPY_FEEDBACK_DURATION);

@@ -34,16 +34,18 @@ export default function SocialShare({ title, text, url, className }: SocialShare
 
   const shareText = text?.trim() || title;
   const encodedUrl = encodeURIComponent(currentUrl);
-  const encodedTitle = encodeURIComponent(title);
   const encodedText = encodeURIComponent(shareText);
+  const canNativeShare =
+    typeof navigator !== 'undefined' &&
+    typeof navigator.share === 'function';
 
   const shareUrls = useMemo(
     () => ({
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-      x: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+      x: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
       line: `https://social-plugins.line.me/lineit/share?url=${encodedUrl}`,
     }),
-    [encodedTitle, encodedUrl]
+    [encodedText, encodedUrl]
   );
 
   const openShareWindow = (target: ShareTarget) => {
@@ -102,7 +104,7 @@ export default function SocialShare({ title, text, url, className }: SocialShare
           {copied ? '連結已複製' : '複製連結'}
         </button>
 
-        {typeof navigator !== 'undefined' && navigator.share && (
+        {canNativeShare && (
           <button
             type="button"
             className="share-button share-button--primary"

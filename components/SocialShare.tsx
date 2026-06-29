@@ -61,9 +61,13 @@ export default function SocialShare({ title, text, url, className }: SocialShare
       return;
     }
 
-    await navigator.clipboard.writeText(currentUrl);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
   };
 
   const handleNativeShare = async () => {
@@ -71,11 +75,15 @@ export default function SocialShare({ title, text, url, className }: SocialShare
       return;
     }
 
-    await navigator.share({
-      title,
-      text: shareText,
-      url: currentUrl,
-    });
+    try {
+      await navigator.share({
+        title,
+        text: shareText,
+        url: currentUrl,
+      });
+    } catch {
+      return;
+    }
   };
 
   return (

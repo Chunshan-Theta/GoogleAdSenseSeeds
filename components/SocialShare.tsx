@@ -7,6 +7,8 @@ interface SocialShareProps {
   text?: string;
   url?: string;
   className?: string;
+  headerTitle?: string;
+  description?: string;
 }
 
 type ShareTarget = 'facebook' | 'x' | 'line';
@@ -17,7 +19,14 @@ const SHARE_LABELS: Record<ShareTarget, string> = {
   line: 'LINE',
 };
 
-export default function SocialShare({ title, text, url, className }: SocialShareProps) {
+export default function SocialShare({
+  title,
+  text,
+  url,
+  className,
+  headerTitle = '社群分享',
+  description = '快速分享這個頁面，也方便未來嵌入其他頁面。',
+}: SocialShareProps) {
   const [currentUrl, setCurrentUrl] = useState(url ?? '');
   const [copied, setCopied] = useState(false);
 
@@ -89,8 +98,8 @@ export default function SocialShare({ title, text, url, className }: SocialShare
   return (
     <section className={`social-share${className ? ` ${className}` : ''}`}>
       <div className="social-share__header">
-        <h2 className="social-share__title">社群分享</h2>
-        <p className="social-share__description">把這份測驗分享給朋友，也方便未來嵌入其他頁面。</p>
+        <h2 className="social-share__title">{headerTitle}</h2>
+        <p className="social-share__description">{description}</p>
       </div>
 
       <div className="social-share__actions">

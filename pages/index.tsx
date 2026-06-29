@@ -309,8 +309,6 @@ export default function Home() {
       <div className="container">
         <h1>{siteTitle}</h1>
         <p className="subtitle">{siteDesc}</p>
-        <SocialShare title={siteTitle} text={shareText} description={shareModuleDescription} />
-
         <div className="notice">
           💡
           填寫提示：在第一部分的作答中，請仔細閱讀所有選項，並盡可能往下選擇您目前能達到的「最高」或「最寬裕」的狀態，這將幫助系統為您定位最真實的財富階段。
@@ -425,8 +423,14 @@ export default function Home() {
                 )}
               </div>
             </div>
+
+          <br />
+          <SocialShare title={siteTitle} text={shareText} description={shareModuleDescription} />
+
           </div>
+          
         )}
+
       </div>
     </>
   );

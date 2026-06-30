@@ -4,7 +4,7 @@ export default function Document() {
   const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 
   return (
-    <Html lang="zh-TW">
+    <Html lang="en">
       <Head>
         {adsenseId && (
           <script

@@ -25,8 +25,8 @@ export default function SocialShare({
   text,
   url,
   className,
-  headerTitle = '社群分享',
-  description = '快速分享這個頁面，也方便未來嵌入其他頁面。',
+  headerTitle = 'Share this page',
+  description = 'Share this page quickly or reuse this module on future pages.',
 }: SocialShareProps) {
   const [currentUrl, setCurrentUrl] = useState(url ?? '');
   const [copied, setCopied] = useState(false);
@@ -54,9 +54,7 @@ export default function SocialShare({
   const shareText = text?.trim() || title;
   const encodedUrl = encodeURIComponent(currentUrl);
   const encodedText = encodeURIComponent(shareText);
-  const canNativeShare =
-    typeof navigator !== 'undefined' &&
-    typeof navigator.share === 'function';
+  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
   const shareUrls = useMemo(
     () => ({
@@ -119,9 +117,7 @@ export default function SocialShare({
       </div>
 
       <div className="social-share__actions">
-        {(
-          Object.keys(SHARE_LABELS) as ShareTarget[]
-        ).map((target) => (
+        {(Object.keys(SHARE_LABELS) as ShareTarget[]).map((target) => (
           <button
             key={target}
             type="button"
@@ -129,12 +125,17 @@ export default function SocialShare({
             onClick={() => openShareWindow(target)}
             disabled={!currentUrl}
           >
-            分享到 {SHARE_LABELS[target]}
+            Share on {SHARE_LABELS[target]}
           </button>
         ))}
 
-        <button type="button" className="share-button share-button--secondary" onClick={handleCopy} disabled={!currentUrl}>
-          {copied ? '連結已複製' : '複製連結'}
+        <button
+          type="button"
+          className="share-button share-button--secondary"
+          onClick={handleCopy}
+          disabled={!currentUrl}
+        >
+          {copied ? 'Link copied' : 'Copy link'}
         </button>
 
         {canNativeShare && (
@@ -144,13 +145,13 @@ export default function SocialShare({
             onClick={handleNativeShare}
             disabled={!currentUrl}
           >
-            系統分享
+            System share
           </button>
         )}
       </div>
 
-      <div className="social-share__link" title={currentUrl || '目前尚無可分享連結'}>
-        {currentUrl || '載入分享連結中…'}
+      <div className="social-share__link" title={currentUrl || 'No shareable link is available yet'}>
+        {currentUrl || 'Loading shareable link...'}
       </div>
     </section>
   );

@@ -1,45 +1,43 @@
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import Head from 'next/head';
 import SocialShare from '../components/SocialShare';
 
-// ─── Feedback text arrays (raw text, no A/B/C prefix) ────────────
 const textQ2 = [
-  '容錯率低，意外生病或請假可能導致收入中斷、影響生活。',
-  '去超市不需對每一項斤斤計較，多買點日用品不會覺得有負擔。',
-  '去餐廳點餐不會完全被價格綁架，不會每點一道菜就心痛。',
-  '可自由花錢買體驗或旅行、住好飯店，不輕易被價格勸退。',
-  '能輕鬆買到理想中的房子，住宅選擇不再是人生限制。',
-  '金錢成為影響世界、改變產業或支持研究的工具。',
+  'Your margin for error is low, so an illness or a day off could interrupt your income and destabilize daily life.',
+  'You can shop for groceries without scrutinizing every item, and buying a few extra essentials does not feel stressful.',
+  'You can order at restaurants without being ruled by the price tag or regretting every dish you pick.',
+  'You can comfortably spend on experiences, travel, or nicer hotels without being talked out of it by the price.',
+  'You can realistically afford the home you want, so housing is no longer a major life constraint.',
+  'Money has become a tool for shaping the world, changing industries, or supporting research.',
 ];
 
 const textQ3 = [
-  '提高收入、處理債務、建立能應付意外的基本緊急預備金。',
-  '投資自己的技能，尋找專長與市場需求的交集，以提高主動收入。',
-  '讓錢幫你賺錢，買進生財資產並持續投入，避免生活膨脹太快。',
-  '尋找槓桿以突破單靠薪水與一般投資的瓶頸。',
-  '保護現有財富，處理因財富變多產生的新問題。',
-  '建立某種長期存在，甚至在離開之後都會持續運作的影響力事物。',
+  'Increase income, reduce debt, and build a basic emergency fund that can absorb unexpected setbacks.',
+  'Invest in your skills and find the overlap between your strengths and market demand to raise active income.',
+  'Put money to work, keep acquiring productive assets, and avoid letting lifestyle inflation outpace growth.',
+  'Find leverage that helps you break beyond the limits of salary alone and standard investing.',
+  'Protect existing wealth and solve the new problems that appear as assets grow.',
+  'Build something lasting that continues to create impact even after you step away.',
 ];
 
 const textQ4 = [
-  '100 元台幣以內',
-  '300 元台幣以內',
-  '3,000 元台幣以內',
-  '30,000 元台幣以內',
-  '300,000 元台幣以內',
-  '日常花費數字對我已無實質意義，完全不會為了消費金額焦慮。',
+  'Up to TWD 100',
+  'Up to TWD 300',
+  'Up to TWD 3,000',
+  'Up to TWD 30,000',
+  'Up to TWD 300,000',
+  'Everyday spending has little practical meaning to me now, and I feel no anxiety about the amount.',
 ];
 
 const textQ5 = [
-  '為了多賺 1,000 元，我願意投入半天以上的勞力或兼差。',
-  '我願意花費時間接案或加班，以換取數千元的額外收入。',
-  '若新收入無法帶來數萬元的進帳，我不會輕易出賣寶貴的時間。',
-  '我只專注於能帶來數十萬以上回報的槓桿機會，拒絕零星低薪工作。',
-  '我不再為微小比例的增長出賣時間，主要關注百萬級別以上的資產保護。',
-  '我只將時間投入在能產生巨大社會影響力的決策上，不單純為賺錢工作。',
+  'To earn an extra TWD 1,000, I am willing to spend half a day or more on labor or side work.',
+  'I am willing to freelance or work overtime for a few thousand TWD of extra income.',
+  'If a new opportunity cannot bring in tens of thousands of TWD, I will not trade away valuable time easily.',
+  'I focus only on leveraged opportunities that can return hundreds of thousands of TWD or more, and I reject scattered low-pay work.',
+  'I no longer trade time for tiny percentage gains and mainly focus on protecting assets at the million-TWD level and above.',
+  'I invest my time only in decisions that can create major social impact, not simply in work that makes money.',
 ];
 
-// ─── Question definitions ─────────────────────────────────────────
 interface QuestionDef {
   name: string;
   title: string;
@@ -49,69 +47,135 @@ interface QuestionDef {
 const WEALTH_QUESTIONS: QuestionDef[] = [
   {
     name: 'q1',
-    title: '1. 您的淨資產範圍大約落在以下哪個區間？',
+    title: '1. Which range best matches your approximate net worth?',
     options: [
-      { value: 1, label: 'A. 不到 30 萬台幣' },
-      { value: 2, label: 'B. 台幣 30 萬到 300 萬' },
-      { value: 3, label: 'C. 台幣 300 萬到 3 千萬' },
-      { value: 4, label: 'D. 台幣 3 千萬到 3 億' },
-      { value: 5, label: 'E. 台幣 3 億到 30 億' },
-      { value: 6, label: 'F. 台幣 30 億以上' },
+      { value: 1, label: 'A. Less than TWD 300,000' },
+      { value: 2, label: 'B. TWD 300,000 to 3 million' },
+      { value: 3, label: 'C. TWD 3 million to 30 million' },
+      { value: 4, label: 'D. TWD 30 million to 300 million' },
+      { value: 5, label: 'E. TWD 300 million to 3 billion' },
+      { value: 6, label: 'F. More than TWD 3 billion' },
     ],
   },
   {
     name: 'q2',
-    title: '2. 在日常消費與生活狀態中，您目前最符合哪一種自由程度？',
+    title: '2. In daily spending and lifestyle, which level of freedom fits you best right now?',
     options: [
-      { value: 1, label: 'A. 容錯率低，意外生病或請假可能導致收入中斷、影響生活。' },
-      { value: 2, label: 'B. 去超市不需對每一項斤斤計較，多買點日用品不會覺得有負擔。' },
-      { value: 3, label: 'C. 去餐廳點餐不會完全被價格綁架，不會每點一道菜就心痛。' },
-      { value: 4, label: 'D. 可自由花錢買體驗或旅行、住好飯店，不輕易被價格勸退。' },
-      { value: 5, label: 'E. 能輕鬆買到理想中的房子，住宅選擇不再是人生限制。' },
-      { value: 6, label: 'F. 金錢成為影響世界、改變產業或支持研究的工具。' },
+      {
+        value: 1,
+        label:
+          'A. Your margin for error is low, so an illness or a day off could interrupt your income and destabilize daily life.',
+      },
+      {
+        value: 2,
+        label:
+          'B. You can shop for groceries without scrutinizing every item, and buying a few extra essentials does not feel stressful.',
+      },
+      {
+        value: 3,
+        label:
+          'C. You can order at restaurants without being ruled by the price tag or regretting every dish you pick.',
+      },
+      {
+        value: 4,
+        label:
+          'D. You can comfortably spend on experiences, travel, or nicer hotels without being talked out of it by the price.',
+      },
+      {
+        value: 5,
+        label:
+          'E. You can realistically afford the home you want, so housing is no longer a major life constraint.',
+      },
+      {
+        value: 6,
+        label: 'F. Money has become a tool for shaping the world, changing industries, or supporting research.',
+      },
     ],
   },
   {
     name: 'q3',
-    title: '3. 您現階段最需要專注的主線任務是什麼？',
+    title: '3. What is the main mission you most need to focus on at this stage?',
     options: [
-      { value: 1, label: 'A. 提高收入、處理債務、建立能應付意外的基本緊急預備金。' },
-      { value: 2, label: 'B. 投資自己的技能，尋找專長與市場需求的交集，以提高主動收入。' },
-      { value: 3, label: 'C. 讓錢幫你賺錢，買進生財資產並持續投入，避免生活膨脹太快。' },
-      { value: 4, label: 'D. 尋找槓桿以突破單靠薪水與一般投資的瓶頸。' },
-      { value: 5, label: 'E. 保護現有財富，處理因財富變多產生的新問題。' },
-      { value: 6, label: 'F. 建立某種長期存在，甚至在離開之後都會持續運作的影響力事物。' },
+      {
+        value: 1,
+        label:
+          'A. Increase income, reduce debt, and build a basic emergency fund that can absorb unexpected setbacks.',
+      },
+      {
+        value: 2,
+        label:
+          'B. Invest in your skills and find the overlap between your strengths and market demand to raise active income.',
+      },
+      {
+        value: 3,
+        label:
+          'C. Put money to work, keep acquiring productive assets, and avoid letting lifestyle inflation outpace growth.',
+      },
+      {
+        value: 4,
+        label:
+          'D. Find leverage that helps you break beyond the limits of salary alone and standard investing.',
+      },
+      {
+        value: 5,
+        label: 'E. Protect existing wealth and solve the new problems that appear as assets grow.',
+      },
+      {
+        value: 6,
+        label: 'F. Build something lasting that continues to create impact even after you step away.',
+      },
     ],
   },
   {
     name: 'q4',
     title:
-      '4. 面對日常支出，當您花費一筆金錢時，以下哪個金額是您完全不需感到焦慮或罪惡的上限？',
+      '4. For everyday expenses, what amount can you spend without feeling anxiety or guilt?',
     options: [
-      { value: 1, label: 'A. 100 元台幣以內' },
-      { value: 2, label: 'B. 300 元台幣以內' },
-      { value: 3, label: 'C. 3,000 元台幣以內' },
-      { value: 4, label: 'D. 30,000 元台幣以內' },
-      { value: 5, label: 'E. 300,000 元台幣以內' },
-      { value: 6, label: 'F. 日常花費數字對我已無實質意義，完全不會為了消費金額焦慮。' },
+      { value: 1, label: 'A. Up to TWD 100' },
+      { value: 2, label: 'B. Up to TWD 300' },
+      { value: 3, label: 'C. Up to TWD 3,000' },
+      { value: 4, label: 'D. Up to TWD 30,000' },
+      { value: 5, label: 'E. Up to TWD 300,000' },
+      {
+        value: 6,
+        label:
+          'F. Everyday spending has little practical meaning to me now, and I feel no anxiety about the amount.',
+      },
     ],
   },
   {
     name: 'q5',
     title:
-      '5. 面對增加收入與時間分配的抉擇，當有新的賺錢機會出現時，您當前的決策直覺最符合哪一項？',
+      '5. When a new money-making opportunity appears, which instinct best matches your current trade-off between income and time?',
     options: [
-      { value: 1, label: 'A. 為了多賺 1,000 元，我願意投入半天以上的勞力或兼差。' },
-      { value: 2, label: 'B. 我願意花費時間接案或加班，以換取數千元的額外收入。' },
-      { value: 3, label: 'C. 若新收入無法帶來數萬元的進帳，我不會輕易出賣寶貴的時間。' },
-      { value: 4, label: 'D. 我只專注於能帶來數十萬以上回報的槓桿機會，拒絕零星低薪工作。' },
+      {
+        value: 1,
+        label:
+          'A. To earn an extra TWD 1,000, I am willing to spend half a day or more on labor or side work.',
+      },
+      {
+        value: 2,
+        label: 'B. I am willing to freelance or work overtime for a few thousand TWD of extra income.',
+      },
+      {
+        value: 3,
+        label:
+          'C. If a new opportunity cannot bring in tens of thousands of TWD, I will not trade away valuable time easily.',
+      },
+      {
+        value: 4,
+        label:
+          'D. I focus only on leveraged opportunities that can return hundreds of thousands of TWD or more, and I reject scattered low-pay work.',
+      },
       {
         value: 5,
-        label: 'E. 我不再為微小比例的增長出賣時間，主要關注百萬級別以上的資產保護。',
+        label:
+          'E. I no longer trade time for tiny percentage gains and mainly focus on protecting assets at the million-TWD level and above.',
       },
       {
         value: 6,
-        label: 'F. 我只將時間投入在能產生巨大社會影響力的決策上，不單純為賺錢工作。',
+        label:
+          'F. I invest my time only in decisions that can create major social impact, not simply in work that makes money.',
       },
     ],
   },
@@ -120,71 +184,161 @@ const WEALTH_QUESTIONS: QuestionDef[] = [
 const HAPPINESS_QUESTIONS: QuestionDef[] = [
   {
     name: 'h1',
-    title: '1. 您的生活緊繃程度與選擇權如何？',
+    title: '1. How much pressure and choice do you have in your daily life?',
     options: [
-      { value: 1, label: '1分：充滿壓力，連最基本的生活選擇都被剝奪，每天為生存焦慮。' },
-      { value: 2, label: '2分：勉強支撐，剛好能負擔生活，但遇到突發狀況就會陷入危機。' },
-      { value: 3, label: '3分：趨於穩定，度過了壓力最大的時期，但生活重心依然是想辦法賺錢。' },
-      { value: 4, label: '4分：餘裕調味，金錢像是調味料讓生活變得更好，擁有較多選擇權。' },
-      { value: 5, label: '5分：豐盛無憂，完全不需為錢煩惱，金錢不再是限制人生的任何阻礙。' },
+      {
+        value: 1,
+        label:
+          '1 point: Life feels extremely pressured, even basic choices are stripped away, and survival anxiety dominates each day.',
+      },
+      {
+        value: 2,
+        label:
+          '2 points: You are barely holding things together. Daily life is manageable, but any surprise could trigger a crisis.',
+      },
+      {
+        value: 3,
+        label:
+          '3 points: Life is becoming steadier. The worst pressure has eased, but earning money still dominates your focus.',
+      },
+      {
+        value: 4,
+        label:
+          '4 points: You have breathing room. Money works like seasoning that improves life, and you have more choices.',
+      },
+      {
+        value: 5,
+        label:
+          '5 points: Life feels abundant and secure. Money no longer creates meaningful limits in how you live.',
+      },
     ],
   },
   {
     name: 'h2',
-    title: '2. 您的人際連結與親密關係健康嗎？',
+    title: '2. How healthy are your relationships and close connections?',
     options: [
-      { value: 1, label: '1分：孤立無援，0 個親密朋友，且與家人關係極差、充滿衝突。' },
-      { value: 2, label: '2分：關係疏離，僅有 1 到 2 位點頭之交，難以對人敞開心房。' },
-      { value: 3, label: '3分：基本社交，有 2 到 3 位可以偶爾談心的朋友，家庭關係普通。' },
-      { value: 4, label: '4分：穩定支持，有 3 到 4 位知心好友，與家人或伴侶關係良好和睦。' },
-      { value: 5, label: '5分：深度連結，擁有 5 位以上隨時能依靠的親密朋友，給予強大支持。' },
+      {
+        value: 1,
+        label:
+          '1 point: You feel isolated, have no close friends, and your family relationships are highly conflicted.',
+      },
+      {
+        value: 2,
+        label:
+          '2 points: Relationships feel distant. You may know one or two people casually, but opening up feels difficult.',
+      },
+      {
+        value: 3,
+        label:
+          '3 points: Social life is functional. You have two or three people you can occasionally talk to, and family ties are average.',
+      },
+      {
+        value: 4,
+        label:
+          '4 points: You have stable support. There are several close friends, and your relationship with family or a partner is solid.',
+      },
+      {
+        value: 5,
+        label:
+          '5 points: Your connections are deep. You have five or more people you can truly rely on for strong emotional support.',
+      },
     ],
   },
   {
     name: 'h3',
-    title: '3. 您的內在成就感與生活動機穩定嗎？',
+    title: '3. How stable are your inner sense of achievement and motivation?',
     options: [
-      { value: 1, label: '1分：嚴重空虛，完全不知道每天前進的動力是什麼，感到極度迷茫。' },
-      { value: 2, label: '2分：仰賴外部，失去金錢壓力或外界推力後，就會喪失動機。' },
-      { value: 3, label: '3分：偶爾迷惘，大方向清楚，但有時會懷疑自己現在做的事情是否有意義。' },
-      { value: 4, label: '4分：目標明確，有穩定的成就感來源，知道自己現階段追求什麼。' },
-      { value: 5, label: '5分：內在富足，擁有強大且清晰的人生使命，充滿內在驅動力。' },
+      {
+        value: 1,
+        label:
+          '1 point: You feel deeply empty, have no idea what drives you each day, and feel intensely lost.',
+      },
+      {
+        value: 2,
+        label:
+          '2 points: Motivation depends on external pressure. Without money pressure or outside force, drive quickly fades.',
+      },
+      {
+        value: 3,
+        label:
+          '3 points: You are occasionally uncertain. The broad direction is clear, but sometimes you wonder whether your work matters.',
+      },
+      {
+        value: 4,
+        label:
+          '4 points: Your goals are clear. You have stable sources of accomplishment and know what you are pursuing right now.',
+      },
+      {
+        value: 5,
+        label:
+          '5 points: You feel inwardly fulfilled, driven by a strong and clear sense of mission in life.',
+      },
     ],
   },
   {
     name: 'h4',
-    title: '4. 在追求目標的過程中，您的健康狀況如何？',
+    title: '4. While pursuing your goals, how is your health holding up?',
     options: [
       {
         value: 1,
-        label: '1分：嚴重透支，為賺錢犧牲健康，已造成不可逆的身體傷害或嚴重慢性病。',
+        label:
+          '1 point: Your body is severely depleted. You have sacrificed health for money and may already face irreversible damage or serious chronic illness.',
       },
-      { value: 2, label: '2分：亮起紅燈，經常熬夜、疲勞，有明顯的身體小毛病但無暇理會。' },
-      { value: 3, label: '3分：狀態平平，無重大疾病，但缺乏運動，偶爾感到體力不濟。' },
+      {
+        value: 2,
+        label:
+          '2 points: Warning signs are flashing. You often stay up late, feel exhausted, and ignore obvious physical issues.',
+      },
+      {
+        value: 3,
+        label:
+          '3 points: Health is average. There is no major illness, but exercise is lacking and your energy can dip.',
+      },
       {
         value: 4,
-        label: '4分：注重保養，有固定的運動習慣與良好睡眠，身體狀態能支撐想做的事。',
+        label:
+          '4 points: You take care of yourself. Regular exercise and decent sleep keep your body able to support what you want to do.',
       },
-      { value: 5, label: '5分：充滿活力，非常健康，妥善維護身心，擁有充沛的精力享受生活。' },
+      {
+        value: 5,
+        label:
+          '5 points: You are vibrant and healthy, maintain body and mind well, and have plenty of energy to enjoy life.',
+      },
     ],
   },
   {
     name: 'h5',
-    title: '5. 您能完全掌控自己的時間分配嗎？',
+    title: '5. How fully do you control the way your time is allocated?',
     options: [
       {
         value: 1,
-        label: '1分：身不由己，時間完全被綁架，把最好的時間都賣掉了，毫無個人餘裕。',
+        label:
+          '1 point: You feel trapped. Your time is completely taken over, and your best hours are sold away with almost no room left for yourself.',
       },
-      { value: 2, label: '2分：勉強擠出，僅能在極短的下班或週末碎片時間做一點想做的事。' },
-      { value: 3, label: '3分：勞逸平衡，擁有一定的自由時間，但主要精華時段仍需受制於人或工作。' },
-      { value: 4, label: '4分：高度自主，能大幅度決定自己的行程，把大部分時間花在重視的事情上。' },
-      { value: 5, label: '5分：時間自由，百分之百掌控自己的日曆，能任意將時間投入真正熱愛的事物。' },
+      {
+        value: 2,
+        label:
+          '2 points: You can only squeeze out tiny pockets of time after work or on weekends for what matters to you.',
+      },
+      {
+        value: 3,
+        label:
+          '3 points: There is some balance. You have a degree of free time, but your best hours are still mostly controlled by work or obligations.',
+      },
+      {
+        value: 4,
+        label:
+          '4 points: You are highly self-directed and can decide most of your schedule around what matters most.',
+      },
+      {
+        value: 5,
+        label:
+          '5 points: Your time is fully yours. You control your calendar and can direct your energy toward what you truly love.',
+      },
     ],
   },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────
 type StatusType = 'lag' | 'lead' | 'match';
 
 interface FeedbackProps {
@@ -219,22 +373,22 @@ function FeedbackCard({ title, standardText, status, userText, advice }: Feedbac
     <div className="result-item">
       <div className="result-item-title">{title}</div>
       <div className="standard-box">
-        <strong>合乎資產標準的結果應為：</strong>
+        <strong>The asset-aligned benchmark is:</strong>
         <br />
         {standardText}
       </div>
       <div className="advice-box">
         {status === 'match' ? (
           <span className="status-match">
-            ✅ 您的選擇與資產階段完美吻合。
+            ✅ Your choice is fully aligned with your current asset stage.
             <br />
-            建議：{advice}
+            Recommendation: {advice}
           </span>
         ) : (
           <span className={status === 'lag' ? 'status-lag' : 'status-lead'}>
-            ⚠️ 您的選擇：{userText}
+            ⚠️ Your choice: {userText}
             <br />
-            建議：{advice}
+            Recommendation: {advice}
           </span>
         )}
       </div>
@@ -242,7 +396,6 @@ function FeedbackCard({ title, standardText, status, userText, advice }: Feedbac
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────
 type Answers = Record<string, number>;
 
 const REQUIRED_KEYS = ['q1', 'q2', 'q3', 'q4', 'q5', 'h1', 'h2', 'h3', 'h4', 'h5'];
@@ -252,14 +405,16 @@ export default function Home() {
   const [submitted, setSubmitted] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || '現狀與幸福量表';
-  const siteDesc = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || '全面檢視您的財務思維與人生平衡';
+  const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || 'Wealth & Fulfillment Assessment';
+  const siteDesc =
+    process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
+    'Review your financial mindset and life balance from every angle.';
   const shareText =
     process.env.NEXT_PUBLIC_SHARE_TEXT ||
-    '一起用這份量表檢視資產階段、幸福指數與目前最該調整的方向。';
+    'Use this assessment to review your asset stage, fulfillment score, and the next adjustment that matters most.';
   const shareModuleDescription =
     process.env.NEXT_PUBLIC_SHARE_MODULE_DESCRIPTION ||
-    '把這份量表分享給朋友，也保留未來嵌入其他頁面的彈性。';
+    'Share this assessment with friends while keeping it easy to embed on future pages.';
 
   const setAnswer = (name: string, value: number) => {
     setAnswers((prev) => ({ ...prev, [name]: value }));
@@ -267,14 +422,14 @@ export default function Home() {
 
   const handleSubmit = () => {
     if (REQUIRED_KEYS.some((k) => !answers[k])) {
-      alert('請完成所有（共10題）選項後，再查看分析建議喔！');
+      alert('Please complete all 10 questions before viewing your analysis.');
       return;
     }
     setSubmitted(true);
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
   };
 
-  const q1 = answers['q1'] ?? 0;
+  const q1 = answers.q1 ?? 0;
   const totalHappiness = ['h1', 'h2', 'h3', 'h4', 'h5'].reduce(
     (sum, k) => sum + (answers[k] ?? 0),
     0
@@ -310,127 +465,109 @@ export default function Home() {
         <h1>{siteTitle}</h1>
         <p className="subtitle">{siteDesc}</p>
         <div className="notice">
-          💡
-          填寫提示：在第一部分的作答中，請仔細閱讀所有選項，並盡可能往下選擇您目前能達到的「最高」或「最寬裕」的狀態，這將幫助系統為您定位最真實的財富階段。
+          💡 Tip: In the first section, read every option carefully and choose the highest or most comfortable state you can honestly sustain right now. That helps the system place you in the most accurate wealth stage.
         </div>
 
-        {/* Part 1 */}
-        <div className="section-title">第一部分：檢測目前資產階段</div>
+        <div className="section-title">Part 1: Identify your current asset stage</div>
         {renderQuestions(WEALTH_QUESTIONS)}
 
-        {/* Part 2 */}
-        <div className="section-title">第二部分：檢測幸福指數</div>
+        <div className="section-title">Part 2: Measure your fulfillment score</div>
         <p style={{ fontSize: '14.5px', color: 'var(--text-light)', marginBottom: '25px' }}>
-          請根據具體指標，評估您在五大維度中的生活狀態：
+          Use the concrete indicators below to assess your life across five core dimensions:
         </p>
         {renderQuestions(HAPPINESS_QUESTIONS)}
 
         <button type="button" className="submit-btn" onClick={handleSubmit}>
-          送出並查看全方位對比分析
+          Submit and view your full comparison analysis
         </button>
 
-        {/* Results */}
         {submitted && (
           <div id="result-section" ref={resultRef}>
-            <div className="result-title">您的專屬評量與對比建議</div>
+            <div className="result-title">Your personalized assessment and recommendations</div>
             <p style={{ fontSize: '15px', marginBottom: '25px' }}>
-              系統已將您的<strong>淨資產階層</strong>
-              作為基準，為您逐一比對各項思維是否合乎當前資產狀態。
+              The system uses your <strong>net worth tier</strong> as the baseline and compares each part
+              of your mindset against what best fits your current asset stage.
             </p>
 
             <FeedbackCard
-              title="【日常自由度比對】"
+              title="Daily freedom comparison"
               {...computeFeedback(
                 q1,
-                answers['q2'] ?? 0,
+                answers.q2 ?? 0,
                 textQ2,
-                '您的生活品質或心態仍停留在過去的恐懼中。請適度放寬心，學習享受辛苦累積的財富，不用再對生活中的小麻煩過度焦慮。',
-                '您的消費自由度超前了資產水準。請小心生活膨脹的速度是否超過了資產成長的速度，這會讓您的財務狀況變得脆弱。',
-                '您對生活的掌控感與您的資產規模非常相符，請繼續保持健康的消費觀。'
+                'Your lifestyle quality or mindset may still be stuck in the fear of an earlier stage. Loosen your grip a little, learn to enjoy the wealth you worked hard to build, and stop overreacting to minor everyday costs.',
+                'Your spending freedom is ahead of your asset level. Be careful that lifestyle inflation is not outrunning asset growth, or your finances may become fragile.',
+                'Your sense of control over daily life fits your asset scale well. Keep maintaining this healthy spending mindset.'
               )}
             />
 
             <FeedbackCard
-              title="【主線任務比對】"
+              title="Main mission comparison"
               {...computeFeedback(
                 q1,
-                answers['q3'] ?? 0,
+                answers.q3 ?? 0,
                 textQ3,
-                '您正花費心力在過往階段的任務上。這會導致您卡在此階層無法突破，請更新您的策略，專注於當前階段最該做的事。',
-                '您似乎正在嘗試越級打怪。在沒有穩固基礎的情況下過早追求高槓桿或影響力，可能會因為地基不穩而承受過高風險。',
-                '您非常清楚現階段最該做的事，這能確保您以最有效率的方式穩步前進。'
+                'You may still be spending energy on tasks from a previous stage. That can keep you stuck. Update your strategy and focus on what matters most at your current level.',
+                'You may be trying to skip levels. Chasing leverage or large-scale impact too early, without a solid base, can expose you to unnecessary risk.',
+                'You are highly clear on the most important task for this stage, which helps you move forward efficiently.'
               )}
             />
 
             <FeedbackCard
-              title="【支出思維比對】"
+              title="Spending mindset comparison"
               {...computeFeedback(
                 q1,
-                answers['q4'] ?? 0,
+                answers.q4 ?? 0,
                 textQ4,
-                '您仍在為不該焦慮的小錢感到罪惡。許多人在資產成長後卡住，就是被以前靠省錢度過低潮的舊思維綁住。請適度放寬日常消費的容忍度，把精力留給更重要的決策。',
-                '對於您目前的資產水位來說，這樣的支出習慣可能過度膨脹。建議稍微收緊，別用更高階層的標準來合理化自己的開銷。',
-                '您對於多少錢算大錢、多少錢算小錢的拿捏非常精準，能理性消費而不過度焦慮。'
+                'You may still feel guilty about small amounts that no longer deserve that level of anxiety. Many people get stuck after their assets grow because old scarcity habits still control them. Relax everyday spending tolerance and save your energy for bigger decisions.',
+                'For your current asset base, this spending habit may be too inflated. Tighten it slightly and avoid using a higher-tier standard to justify current expenses.',
+                'You have a precise feel for what counts as a big expense and what does not, which supports rational spending without unnecessary anxiety.'
               )}
             />
 
             <FeedbackCard
-              title="【收入與時間思維比對】"
+              title="Income and time comparison"
               {...computeFeedback(
                 q1,
-                answers['q5'] ?? 0,
+                answers.q5 ?? 0,
                 textQ5,
-                '您的時間價值已經提升，但仍習慣出賣便宜的時間去換取微小的收入。舊的方法無法帶您跨入新階級，學會拒絕低效收入，尋找槓桿！',
-                '您可能眼高手低了。在您目前的資產階段，那些看似微薄的收入其實對累積本金仍有實質幫助，切勿過早追求不切實際的巨大回報。',
-                '您非常了解自己的機會成本，不會隨便為小錢賣命，也不會錯失該賺的錢。'
+                'The value of your time has already risen, but you may still be trading cheap hours for too little return. Old methods will not carry you into a new tier. Reject low-efficiency income and look for leverage.',
+                'You may be aiming too high too soon. At your current asset stage, smaller opportunities can still make a meaningful contribution to your capital base, so do not dismiss them prematurely.',
+                'You understand your opportunity cost well. You do not overwork for small money, but you also do not miss income that is still worth capturing.'
               )}
             />
 
-            {/* Happiness summary */}
             <div className="result-item" style={{ borderLeft: '4px solid var(--accent-color)' }}>
-              <div
-                className="result-item-title"
-                style={{ border: 'none', marginBottom: '5px' }}
-              >
-                【綜合幸福財富評估】
+              <div className="result-item-title" style={{ border: 'none', marginBottom: '5px' }}>
+                Overall fulfillment and wealth assessment
               </div>
               <div style={{ fontSize: '14.5px', color: '#444', lineHeight: '1.8' }}>
                 {avgH < 3 ? (
                   <>
-                    <span className="status-lag">
-                      🚨 幸福指數偏低 (總分 {totalHappiness}/25)
-                    </span>
+                    <span className="status-lag">🚨 Lower fulfillment score (total {totalHappiness}/25)</span>
                     <br />
-                    您的健康、人際或時間財富處於匱乏狀態。如果本來就空虛孤立，錢只會把問題放大。強烈建議您暫停腳步，停止為了賺錢犧牲無法買回的健康與人際關係。
+                    Your health, relationships, or time freedom may be in a depleted state. If life already feels empty or isolated, more money will only magnify the problem. Strongly consider slowing down and stop sacrificing health or relationships for income.
                   </>
                 ) : avgH < 4.2 ? (
                   <>
-                    <span className="status-lead">
-                      ⚖️ 幸福指數中等 (總分 {totalHappiness}/25)
-                    </span>
+                    <span className="status-lead">⚖️ Mid-range fulfillment score (total {totalHappiness}/25)</span>
                     <br />
-                    您的生活處於動態平衡，但可能在某些無形的維度上仍有欠缺。請檢視是否有單一項目低於
-                    3 分，填補它會比帳面數字增加帶來更多的快樂。
+                    Your life is in dynamic balance, but one or two invisible dimensions may still be undernourished. Review whether any single area scored below 3. Improving that area may create more happiness than increasing the number on paper.
                   </>
                 ) : (
                   <>
-                    <span className="status-match">
-                      🌟 幸福指數極佳 (總分 {totalHappiness}/25)
-                    </span>
+                    <span className="status-match">🌟 Excellent fulfillment score (total {totalHappiness}/25)</span>
                     <br />
-                    恭喜您！您不僅在累積帳面的數字，更掌握了人生最重要的社會、心理、身體與時間財富，活出了真正的豐盛。
+                    Congratulations. You are not just accumulating numbers on paper. You are also protecting the social, psychological, physical, and time wealth that makes life genuinely rich.
                   </>
                 )}
               </div>
             </div>
 
-          <br />
-          <SocialShare title={siteTitle} text={shareText} description={shareModuleDescription} />
-
+            <br />
+            <SocialShare title={siteTitle} text={shareText} description={shareModuleDescription} />
           </div>
-          
         )}
-
       </div>
     </>
   );

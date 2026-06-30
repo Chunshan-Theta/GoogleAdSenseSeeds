@@ -21,20 +21,20 @@ const textQ3 = [
 ];
 
 const textQ4 = [
-  'Up to TWD 100',
-  'Up to TWD 300',
-  'Up to TWD 3,000',
-  'Up to TWD 30,000',
-  'Up to TWD 300,000',
+  'Up to USD 3',
+  'Up to USD 10',
+  'Up to USD 100',
+  'Up to USD 1,000',
+  'Up to USD 10,000',
   'Everyday spending has little practical meaning to me now, and I feel no anxiety about the amount.',
 ];
 
 const textQ5 = [
-  'To earn an extra TWD 1,000, I am willing to spend half a day or more on labor or side work.',
-  'I am willing to freelance or work overtime for a few thousand TWD of extra income.',
-  'If a new opportunity cannot bring in tens of thousands of TWD, I will not trade away valuable time easily.',
-  'I focus only on leveraged opportunities that can return hundreds of thousands of TWD or more, and I reject scattered low-pay work.',
-  'I no longer trade time for tiny percentage gains and mainly focus on protecting assets at the million-TWD level and above.',
+  'To earn an extra USD 30, I am willing to spend half a day or more on labor or side work.',
+  'I am willing to freelance or work overtime for a few hundred USD of extra income.',
+  'If a new opportunity cannot bring in a few thousand USD, I will not trade away valuable time easily.',
+  'I focus only on leveraged opportunities that can return tens of thousands of USD or more, and I reject scattered low-pay work.',
+  'I no longer trade time for tiny percentage gains and mainly focus on protecting assets at the million-USD level and above.',
   'I invest my time only in decisions that can create major social impact, not simply in work that makes money.',
 ];
 
@@ -49,12 +49,12 @@ const WEALTH_QUESTIONS: QuestionDef[] = [
     name: 'q1',
     title: '1. Which range best matches your approximate net worth?',
     options: [
-      { value: 1, label: 'A. Less than TWD 300,000' },
-      { value: 2, label: 'B. TWD 300,000 to 3 million' },
-      { value: 3, label: 'C. TWD 3 million to 30 million' },
-      { value: 4, label: 'D. TWD 30 million to 300 million' },
-      { value: 5, label: 'E. TWD 300 million to 3 billion' },
-      { value: 6, label: 'F. More than TWD 3 billion' },
+      { value: 1, label: 'A. Less than USD 10,000' },
+      { value: 2, label: 'B. USD 10,000 to 100,000' },
+      { value: 3, label: 'C. USD 100,000 to 1 million' },
+      { value: 4, label: 'D. USD 1 million to 10 million' },
+      { value: 5, label: 'E. USD 10 million to 100 million' },
+      { value: 6, label: 'F. More than USD 100 million' },
     ],
   },
   {
@@ -131,11 +131,11 @@ const WEALTH_QUESTIONS: QuestionDef[] = [
     title:
       '4. For everyday expenses, what amount can you spend without feeling anxiety or guilt?',
     options: [
-      { value: 1, label: 'A. Up to TWD 100' },
-      { value: 2, label: 'B. Up to TWD 300' },
-      { value: 3, label: 'C. Up to TWD 3,000' },
-      { value: 4, label: 'D. Up to TWD 30,000' },
-      { value: 5, label: 'E. Up to TWD 300,000' },
+      { value: 1, label: 'A. Up to USD 3' },
+      { value: 2, label: 'B. Up to USD 10' },
+      { value: 3, label: 'C. Up to USD 100' },
+      { value: 4, label: 'D. Up to USD 1,000' },
+      { value: 5, label: 'E. Up to USD 10,000' },
       {
         value: 6,
         label:
@@ -151,26 +151,26 @@ const WEALTH_QUESTIONS: QuestionDef[] = [
       {
         value: 1,
         label:
-          'A. To earn an extra TWD 1,000, I am willing to spend half a day or more on labor or side work.',
+          'A. To earn an extra USD 30, I am willing to spend half a day or more on labor or side work.',
       },
       {
         value: 2,
-        label: 'B. I am willing to freelance or work overtime for a few thousand TWD of extra income.',
+        label: 'B. I am willing to freelance or work overtime for a few hundred USD of extra income.',
       },
       {
         value: 3,
         label:
-          'C. If a new opportunity cannot bring in tens of thousands of TWD, I will not trade away valuable time easily.',
+          'C. If a new opportunity cannot bring in a few thousand USD, I will not trade away valuable time easily.',
       },
       {
         value: 4,
         label:
-          'D. I focus only on leveraged opportunities that can return hundreds of thousands of TWD or more, and I reject scattered low-pay work.',
+          'D. I focus only on leveraged opportunities that can return tens of thousands of USD or more, and I reject scattered low-pay work.',
       },
       {
         value: 5,
         label:
-          'E. I no longer trade time for tiny percentage gains and mainly focus on protecting assets at the million-TWD level and above.',
+          'E. I no longer trade time for tiny percentage gains and mainly focus on protecting assets at the million-USD level and above.',
       },
       {
         value: 6,

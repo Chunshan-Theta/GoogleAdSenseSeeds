@@ -409,6 +409,8 @@ export default function Home() {
   const siteDesc =
     process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
     'Review your financial mindset and life balance from every angle.';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const traditionalChineseUrl = process.env.NEXT_PUBLIC_SITE_ZH_TW_URL;
   const shareText =
     process.env.NEXT_PUBLIC_SHARE_TEXT ||
     'Use this assessment to review your asset stage, fulfillment score, and the next adjustment that matters most.';
@@ -459,6 +461,14 @@ export default function Home() {
       <Head>
         <title>{siteTitle}</title>
         <meta name="description" content={siteDesc} />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale:alternate" content="zh_TW" />
+        {siteUrl && <link rel="canonical" href={siteUrl} />}
+        {siteUrl && <link rel="alternate" hrefLang="en" href={siteUrl} />}
+        {traditionalChineseUrl && (
+          <link rel="alternate" hrefLang="zh-TW" href={traditionalChineseUrl} />
+        )}
+        {siteUrl && <link rel="alternate" hrefLang="x-default" href={siteUrl} />}
       </Head>
 
       <div className="container">

@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@types/node": "^22",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "typescript": "^5"

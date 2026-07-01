@@ -1,460 +1,240 @@
-import { useRef, useState } from 'react';
+import { ChangeEvent, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
-import SocialShare from '../components/SocialShare';
+import Papa from 'papaparse';
 
-const textQ2 = [
-  'Your margin for error is low, so an illness or a day off could interrupt your income and destabilize daily life.',
-  'You can shop for groceries without scrutinizing every item, and buying a few extra essentials does not feel stressful.',
-  'You can order at restaurants without being ruled by the price tag or regretting every dish you pick.',
-  'You can comfortably spend on experiences, travel, or nicer hotels without being talked out of it by the price.',
-  'You can realistically afford the home you want, so housing is no longer a major life constraint.',
-  'Money has become a tool for shaping the world, changing industries, or supporting research.',
-];
+type CellStatus = 'identical' | 'empty' | 'added' | 'removed' | 'changed';
 
-const textQ3 = [
-  'Increase income, reduce debt, and build a basic emergency fund that can absorb unexpected setbacks.',
-  'Invest in your skills and find the overlap between your strengths and market demand to raise active income.',
-  'Put money to work, keep acquiring productive assets, and avoid letting lifestyle inflation outpace growth.',
-  'Find leverage that helps you break beyond the limits of salary alone and standard investing.',
-  'Protect existing wealth and solve the new problems that appear as assets grow.',
-  'Build something lasting that continues to create impact even after you step away.',
-];
-
-const textQ4 = [
-  'Up to USD 3',
-  'Up to USD 10',
-  'Up to USD 100',
-  'Up to USD 1,000',
-  'Up to USD 10,000',
-  'Everyday spending has little practical meaning to me now, and I feel no anxiety about the amount.',
-];
-
-const textQ5 = [
-  'To earn an extra USD 30, I am willing to spend half a day or more on labor or side work.',
-  'I am willing to freelance or work overtime for a few hundred USD of extra income.',
-  'If a new opportunity cannot bring in a few thousand USD, I will not trade away valuable time easily.',
-  'I focus only on leveraged opportunities that can return tens of thousands of USD or more, and I reject scattered low-pay work.',
-  'I no longer trade time for tiny percentage gains and mainly focus on protecting assets at the million-USD level and above.',
-  'I invest my time only in decisions that can create major social impact, not simply in work that makes money.',
-];
-
-interface QuestionDef {
-  name: string;
-  title: string;
-  options: { value: number; label: string }[];
+interface ComparisonCell {
+  colIndex: number;
+  status: CellStatus;
+  val1: string;
+  val2: string;
 }
 
-const WEALTH_QUESTIONS: QuestionDef[] = [
-  {
-    name: 'q1',
-    title: '1. Which range best matches your approximate net worth?',
-    options: [
-      { value: 1, label: 'A. Less than USD 10,000' },
-      { value: 2, label: 'B. USD 10,000 to 100,000' },
-      { value: 3, label: 'C. USD 100,000 to 1 million' },
-      { value: 4, label: 'D. USD 1 million to 10 million' },
-      { value: 5, label: 'E. USD 10 million to 100 million' },
-      { value: 6, label: 'F. More than USD 100 million' },
-    ],
-  },
-  {
-    name: 'q2',
-    title: '2. In daily spending and lifestyle, which level of freedom fits you best right now?',
-    options: [
-      {
-        value: 1,
-        label:
-          'A. Your margin for error is low, so an illness or a day off could interrupt your income and destabilize daily life.',
-      },
-      {
-        value: 2,
-        label:
-          'B. You can shop for groceries without scrutinizing every item, and buying a few extra essentials does not feel stressful.',
-      },
-      {
-        value: 3,
-        label:
-          'C. You can order at restaurants without being ruled by the price tag or regretting every dish you pick.',
-      },
-      {
-        value: 4,
-        label:
-          'D. You can comfortably spend on experiences, travel, or nicer hotels without being talked out of it by the price.',
-      },
-      {
-        value: 5,
-        label:
-          'E. You can realistically afford the home you want, so housing is no longer a major life constraint.',
-      },
-      {
-        value: 6,
-        label: 'F. Money has become a tool for shaping the world, changing industries, or supporting research.',
-      },
-    ],
-  },
-  {
-    name: 'q3',
-    title: '3. What is the main mission you most need to focus on at this stage?',
-    options: [
-      {
-        value: 1,
-        label:
-          'A. Increase income, reduce debt, and build a basic emergency fund that can absorb unexpected setbacks.',
-      },
-      {
-        value: 2,
-        label:
-          'B. Invest in your skills and find the overlap between your strengths and market demand to raise active income.',
-      },
-      {
-        value: 3,
-        label:
-          'C. Put money to work, keep acquiring productive assets, and avoid letting lifestyle inflation outpace growth.',
-      },
-      {
-        value: 4,
-        label:
-          'D. Find leverage that helps you break beyond the limits of salary alone and standard investing.',
-      },
-      {
-        value: 5,
-        label: 'E. Protect existing wealth and solve the new problems that appear as assets grow.',
-      },
-      {
-        value: 6,
-        label: 'F. Build something lasting that continues to create impact even after you step away.',
-      },
-    ],
-  },
-  {
-    name: 'q4',
-    title:
-      '4. For everyday expenses, what amount can you spend without feeling anxiety or guilt?',
-    options: [
-      { value: 1, label: 'A. Up to USD 3' },
-      { value: 2, label: 'B. Up to USD 10' },
-      { value: 3, label: 'C. Up to USD 100' },
-      { value: 4, label: 'D. Up to USD 1,000' },
-      { value: 5, label: 'E. Up to USD 10,000' },
-      {
-        value: 6,
-        label:
-          'F. Everyday spending has little practical meaning to me now, and I feel no anxiety about the amount.',
-      },
-    ],
-  },
-  {
-    name: 'q5',
-    title:
-      '5. When a new money-making opportunity appears, which instinct best matches your current trade-off between income and time?',
-    options: [
-      {
-        value: 1,
-        label:
-          'A. To earn an extra USD 30, I am willing to spend half a day or more on labor or side work.',
-      },
-      {
-        value: 2,
-        label: 'B. I am willing to freelance or work overtime for a few hundred USD of extra income.',
-      },
-      {
-        value: 3,
-        label:
-          'C. If a new opportunity cannot bring in a few thousand USD, I will not trade away valuable time easily.',
-      },
-      {
-        value: 4,
-        label:
-          'D. I focus only on leveraged opportunities that can return tens of thousands of USD or more, and I reject scattered low-pay work.',
-      },
-      {
-        value: 5,
-        label:
-          'E. I no longer trade time for tiny percentage gains and mainly focus on protecting assets at the million-USD level and above.',
-      },
-      {
-        value: 6,
-        label:
-          'F. I invest my time only in decisions that can create major social impact, not simply in work that makes money.',
-      },
-    ],
-  },
-];
-
-const HAPPINESS_QUESTIONS: QuestionDef[] = [
-  {
-    name: 'h1',
-    title: '1. How much pressure and choice do you have in your daily life?',
-    options: [
-      {
-        value: 1,
-        label:
-          '1 point: Life feels extremely pressured, even basic choices are stripped away, and survival anxiety dominates each day.',
-      },
-      {
-        value: 2,
-        label:
-          '2 points: You are barely holding things together. Daily life is manageable, but any surprise could trigger a crisis.',
-      },
-      {
-        value: 3,
-        label:
-          '3 points: Life is becoming steadier. The worst pressure has eased, but earning money still dominates your focus.',
-      },
-      {
-        value: 4,
-        label:
-          '4 points: You have breathing room. Money works like seasoning that improves life, and you have more choices.',
-      },
-      {
-        value: 5,
-        label:
-          '5 points: Life feels abundant and secure. Money no longer creates meaningful limits in how you live.',
-      },
-    ],
-  },
-  {
-    name: 'h2',
-    title: '2. How healthy are your relationships and close connections?',
-    options: [
-      {
-        value: 1,
-        label:
-          '1 point: You feel isolated, have no close friends, and your family relationships are highly conflicted.',
-      },
-      {
-        value: 2,
-        label:
-          '2 points: Relationships feel distant. You may know one or two people casually, but opening up feels difficult.',
-      },
-      {
-        value: 3,
-        label:
-          '3 points: Social life is functional. You have two or three people you can occasionally talk to, and family ties are average.',
-      },
-      {
-        value: 4,
-        label:
-          '4 points: You have stable support. There are several close friends, and your relationship with family or a partner is solid.',
-      },
-      {
-        value: 5,
-        label:
-          '5 points: Your connections are deep. You have five or more people you can truly rely on for strong emotional support.',
-      },
-    ],
-  },
-  {
-    name: 'h3',
-    title: '3. How stable are your inner sense of achievement and motivation?',
-    options: [
-      {
-        value: 1,
-        label:
-          '1 point: You feel deeply empty, have no idea what drives you each day, and feel intensely lost.',
-      },
-      {
-        value: 2,
-        label:
-          '2 points: Motivation depends on external pressure. Without money pressure or outside force, drive quickly fades.',
-      },
-      {
-        value: 3,
-        label:
-          '3 points: You are occasionally uncertain. The broad direction is clear, but sometimes you wonder whether your work matters.',
-      },
-      {
-        value: 4,
-        label:
-          '4 points: Your goals are clear. You have stable sources of accomplishment and know what you are pursuing right now.',
-      },
-      {
-        value: 5,
-        label:
-          '5 points: You feel inwardly fulfilled, driven by a strong and clear sense of mission in life.',
-      },
-    ],
-  },
-  {
-    name: 'h4',
-    title: '4. While pursuing your goals, how is your health holding up?',
-    options: [
-      {
-        value: 1,
-        label:
-          '1 point: Your body is severely depleted. You have sacrificed health for money and may already face irreversible damage or serious chronic illness.',
-      },
-      {
-        value: 2,
-        label:
-          '2 points: Warning signs are flashing. You often stay up late, feel exhausted, and ignore obvious physical issues.',
-      },
-      {
-        value: 3,
-        label:
-          '3 points: Health is average. There is no major illness, but exercise is lacking and your energy can dip.',
-      },
-      {
-        value: 4,
-        label:
-          '4 points: You take care of yourself. Regular exercise and decent sleep keep your body able to support what you want to do.',
-      },
-      {
-        value: 5,
-        label:
-          '5 points: You are vibrant and healthy, maintain body and mind well, and have plenty of energy to enjoy life.',
-      },
-    ],
-  },
-  {
-    name: 'h5',
-    title: '5. How fully do you control the way your time is allocated?',
-    options: [
-      {
-        value: 1,
-        label:
-          '1 point: You feel trapped. Your time is completely taken over, and your best hours are sold away with almost no room left for yourself.',
-      },
-      {
-        value: 2,
-        label:
-          '2 points: You can only squeeze out tiny pockets of time after work or on weekends for what matters to you.',
-      },
-      {
-        value: 3,
-        label:
-          '3 points: There is some balance. You have a degree of free time, but your best hours are still mostly controlled by work or obligations.',
-      },
-      {
-        value: 4,
-        label:
-          '4 points: You are highly self-directed and can decide most of your schedule around what matters most.',
-      },
-      {
-        value: 5,
-        label:
-          '5 points: Your time is fully yours. You control your calendar and can direct your energy toward what you truly love.',
-      },
-    ],
-  },
-];
-
-type StatusType = 'lag' | 'lead' | 'match';
-
-interface FeedbackProps {
-  title: string;
-  standardText: string;
-  status: StatusType;
-  userText: string;
-  advice: string;
+interface ComparisonRow {
+  rowIndex: number;
+  cells: ComparisonCell[];
 }
 
-function computeFeedback(
-  baseVal: number,
-  userVal: number,
-  texts: string[],
-  lagAdv: string,
-  leadAdv: string,
-  matchAdv: string
-): Omit<FeedbackProps, 'title'> {
-  const standardText = texts[baseVal - 1] ?? '';
-  const userText = texts[userVal - 1] ?? '';
-  if (userVal < baseVal) {
-    return { standardText, status: 'lag', userText, advice: lagAdv };
-  }
-  if (userVal > baseVal) {
-    return { standardText, status: 'lead', userText, advice: leadAdv };
-  }
-  return { standardText, status: 'match', userText, advice: matchAdv };
-}
-
-function FeedbackCard({ title, standardText, status, userText, advice }: FeedbackProps) {
-  return (
-    <div className="result-item">
-      <div className="result-item-title">{title}</div>
-      <div className="standard-box">
-        <strong>The asset-aligned benchmark is:</strong>
-        <br />
-        {standardText}
-      </div>
-      <div className="advice-box">
-        {status === 'match' ? (
-          <span className="status-match">
-            ✅ Your choice is fully aligned with your current asset stage.
-            <br />
-            Recommendation: {advice}
-          </span>
-        ) : (
-          <span className={status === 'lag' ? 'status-lag' : 'status-lead'}>
-            ⚠️ Your choice: {userText}
-            <br />
-            Recommendation: {advice}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-type Answers = Record<string, number>;
-
-const REQUIRED_KEYS = ['q1', 'q2', 'q3', 'q4', 'q5', 'h1', 'h2', 'h3', 'h4', 'h5'];
+const ROWS_PER_PAGE = 250;
 
 export default function Home() {
-  const [answers, setAnswers] = useState<Answers>({});
-  const [submitted, setSubmitted] = useState(false);
-  const resultRef = useRef<HTMLDivElement>(null);
+  const [text1, setText1] = useState('');
+  const [text2, setText2] = useState('');
+  const [headers1, setHeaders1] = useState<string[]>([]);
+  const [headers2, setHeaders2] = useState<string[]>([]);
+  const [globalHeaders, setGlobalHeaders] = useState<string[]>([]);
+  const [comparisonData, setComparisonData] = useState<ComparisonRow[]>([]);
+  const [ignoredCols, setIgnoredCols] = useState<Set<number>>(new Set());
+  const [ignoredRows, setIgnoredRows] = useState<Set<number>>(new Set());
+  const [ignoredCells, setIgnoredCells] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isProcessed, setIsProcessed] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
 
-  const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || 'Wealth & Fulfillment Assessment';
+  const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || 'CSV 比對工具 (分頁與統計版)';
   const siteDesc =
     process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
-    'Review your financial mindset and life balance from every angle.';
+    '本地安全執行、標題智慧對應、可忽視欄列單格、支援大資料量分頁比對。';
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const traditionalChineseUrl = process.env.NEXT_PUBLIC_SITE_ZH_TW_URL;
-  const shareText =
-    process.env.NEXT_PUBLIC_SHARE_TEXT ||
-    'Use this assessment to review your asset stage, fulfillment score, and the next adjustment that matters most.';
-  const shareModuleDescription =
-    process.env.NEXT_PUBLIC_SHARE_MODULE_DESCRIPTION ||
-    'Share this assessment with friends while keeping it easy to embed on future pages.';
 
-  const setAnswer = (name: string, value: number) => {
-    setAnswers((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = () => {
-    if (REQUIRED_KEYS.some((k) => !answers[k])) {
-      alert('Please complete all 10 questions before viewing your analysis.');
+  const onFileUpload = (
+    event: ChangeEvent<HTMLInputElement>,
+    setter: (value: string) => void
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) {
       return;
     }
-    setSubmitted(true);
-    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    const reader = new FileReader();
+    reader.onload = (e) => setter(String(e.target?.result || ''));
+    reader.readAsText(file);
   };
 
-  const q1 = answers.q1 ?? 0;
-  const totalHappiness = ['h1', 'h2', 'h3', 'h4', 'h5'].reduce(
-    (sum, k) => sum + (answers[k] ?? 0),
-    0
-  );
-  const avgH = totalHappiness / 5;
+  const processComparison = () => {
+    const trimmed1 = text1.trim();
+    const trimmed2 = text2.trim();
 
-  const renderQuestions = (questions: QuestionDef[]) =>
-    questions.map((q) => (
-      <div key={q.name} className="question">
-        <div className="question-title">{q.title}</div>
-        <div className="options-group">
-          {q.options.map((opt) => (
-            <label
-              key={opt.value}
-              className={`option-label${answers[q.name] === opt.value ? ' selected' : ''}`}
-              onClick={() => setAnswer(q.name, opt.value)}
-            >
-              {opt.label}
-            </label>
-          ))}
-        </div>
-      </div>
-    ));
+    if (!trimmed1 && !trimmed2) {
+      alert('請上傳或貼上 CSV 資料！');
+      return;
+    }
+
+    const config = { header: true, skipEmptyLines: true };
+    const parsed1 = Papa.parse<Record<string, string>>(trimmed1, config);
+    const parsed2 = Papa.parse<Record<string, string>>(trimmed2, config);
+
+    const fields1 = parsed1.meta.fields || [];
+    const fields2 = parsed2.meta.fields || [];
+    const mergedHeaders = Array.from(new Set([...fields1, ...fields2]));
+
+    if (mergedHeaders.length === 0) {
+      alert('無法解析標題，請確認 CSV 格式。');
+      return;
+    }
+
+    const data1 = parsed1.data;
+    const data2 = parsed2.data;
+    const maxRows = Math.max(data1.length, data2.length);
+
+    const nextComparisonData: ComparisonRow[] = [];
+
+    for (let i = 0; i < maxRows; i += 1) {
+      const row1 = data1[i] || {};
+      const row2 = data2[i] || {};
+
+      const cells = mergedHeaders.map((header, colIndex) => {
+        const raw1 = row1[header];
+        const raw2 = row2[header];
+        const val1 = typeof raw1 === 'string' ? raw1.trim() : '';
+        const val2 = typeof raw2 === 'string' ? raw2.trim() : '';
+
+        let status: CellStatus;
+        if (val1 === val2 && val1 !== '') {
+          status = 'identical';
+        } else if (val1 === val2 && val1 === '') {
+          status = 'empty';
+        } else if (val1 === '') {
+          status = 'added';
+        } else if (val2 === '') {
+          status = 'removed';
+        } else {
+          status = 'changed';
+        }
+
+        return { colIndex, status, val1, val2 };
+      });
+
+      nextComparisonData.push({ rowIndex: i, cells });
+    }
+
+    setHeaders1(fields1);
+    setHeaders2(fields2);
+    setGlobalHeaders(mergedHeaders);
+    setComparisonData(nextComparisonData);
+    setIgnoredCols(new Set());
+    setIgnoredRows(new Set());
+    setIgnoredCells(new Set());
+    setCurrentPage(1);
+    setIsProcessed(true);
+  };
+
+  const totalRows = comparisonData.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / ROWS_PER_PAGE));
+
+  const pageData = useMemo(() => {
+    const start = (currentPage - 1) * ROWS_PER_PAGE;
+    const end = Math.min(start + ROWS_PER_PAGE, totalRows);
+    return comparisonData.slice(start, end);
+  }, [comparisonData, currentPage, totalRows]);
+
+  const stats = useMemo(() => {
+    let total = 0;
+    let identical = 0;
+    let changed = 0;
+    let added = 0;
+    let removed = 0;
+
+    comparisonData.forEach((row) => {
+      if (ignoredRows.has(row.rowIndex)) {
+        return;
+      }
+
+      row.cells.forEach((cell) => {
+        if (ignoredCols.has(cell.colIndex)) {
+          return;
+        }
+
+        const cellId = `${row.rowIndex}-${cell.colIndex}`;
+        if (ignoredCells.has(cellId)) {
+          return;
+        }
+
+        total += 1;
+        if (cell.status === 'identical' || cell.status === 'empty') {
+          identical += 1;
+        } else if (cell.status === 'changed') {
+          changed += 1;
+        } else if (cell.status === 'added') {
+          added += 1;
+        } else if (cell.status === 'removed') {
+          removed += 1;
+        }
+      });
+    });
+
+    return { total, identical, changed, added, removed };
+  }, [comparisonData, ignoredCells, ignoredCols, ignoredRows]);
+
+  const pct = (value: number) => {
+    if (stats.total === 0) {
+      return '0%';
+    }
+    return `${((value / stats.total) * 100).toFixed(1)}%`;
+  };
+
+  const toggleColumn = (colIndex: number) => {
+    setIgnoredCols((prev) => {
+      const next = new Set(prev);
+      if (next.has(colIndex)) {
+        next.delete(colIndex);
+      } else {
+        next.add(colIndex);
+      }
+      return next;
+    });
+  };
+
+  const toggleRow = (rowIndex: number) => {
+    setIgnoredRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(rowIndex)) {
+        next.delete(rowIndex);
+      } else {
+        next.add(rowIndex);
+      }
+      return next;
+    });
+  };
+
+  const toggleCell = (rowIndex: number, colIndex: number) => {
+    const cellId = `${rowIndex}-${colIndex}`;
+    setIgnoredCells((prev) => {
+      const next = new Set(prev);
+      if (next.has(cellId)) {
+        next.delete(cellId);
+      } else {
+        next.add(cellId);
+      }
+      return next;
+    });
+  };
+
+  const scrollToStats = () => {
+    statsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const goToPage = (page: number) => {
+    const nextPage = Math.min(totalPages, Math.max(1, page));
+    setCurrentPage(nextPage);
+    setTimeout(scrollToStats, 0);
+  };
+
+  const changePage = (delta: number) => {
+    goToPage(currentPage + delta);
+  };
+
+  const pageNumbers = useMemo(() => {
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+
+    if (endPage - startPage < 4) {
+      startPage = Math.max(1, endPage - 4);
+    }
+
+    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  }, [currentPage, totalPages]);
 
   return (
     <>
@@ -471,111 +251,263 @@ export default function Home() {
         {siteUrl && <link rel="alternate" hrefLang="x-default" href={siteUrl} />}
       </Head>
 
-      <div className="container">
-        <h1>{siteTitle}</h1>
-        <p className="subtitle">{siteDesc}</p>
-        <div className="notice">
-          💡 Tip: In the first section, read every option carefully and choose the highest or most comfortable state you can honestly sustain right now. That helps the system place you in the most accurate wealth stage.
+      <div className="container csv-container">
+        <div className="instructions">
+          <h3>📖 工具功能說明</h3>
+          <ul>
+            <li>
+              <strong>本地安全執行：</strong>所有資料都在您的瀏覽器內處理，不上傳任何伺服器，確保機密資料不外洩。
+            </li>
+            <li>
+              <strong>標題智慧對應：</strong>系統會自動讀取第一行的標題名稱進行比對。即使兩份檔案的欄位順序被打亂，也能精準找出差異。
+            </li>
+            <li>
+              <strong>點擊忽視（不列入計算）：</strong>可點擊表頭、行號、資料格忽視差異，統計面板會即時扣除。
+            </li>
+            <li>
+              <strong>效能優化與分頁控制：</strong>預設每頁 250 筆，可切換上一頁、下一頁或直接跳頁。
+            </li>
+          </ul>
         </div>
 
-        <div className="section-title">Part 1: Identify your current asset stage</div>
-        {renderQuestions(WEALTH_QUESTIONS)}
+        <h1>CSV 比對工具 (分頁與統計版)</h1>
 
-        <div className="section-title">Part 2: Measure your fulfillment score</div>
-        <p style={{ fontSize: '14.5px', color: 'var(--text-light)', marginBottom: '25px' }}>
-          Use the concrete indicators below to assess your life across five core dimensions:
-        </p>
-        {renderQuestions(HAPPINESS_QUESTIONS)}
+        <div className="compare-inputs">
+          <div className="box">
+            <h3>📂 原始資料</h3>
+            <input type="file" accept=".csv" onChange={(e) => onFileUpload(e, setText1)} />
+            <textarea
+              value={text1}
+              onChange={(e) => setText1(e.target.value)}
+              placeholder="或直接貼上含標題的 CSV..."
+            />
+          </div>
+          <div className="box">
+            <h3>📂 修改後資料</h3>
+            <input type="file" accept=".csv" onChange={(e) => onFileUpload(e, setText2)} />
+            <textarea
+              value={text2}
+              onChange={(e) => setText2(e.target.value)}
+              placeholder="或直接貼上含標題的 CSV..."
+            />
+          </div>
+        </div>
 
-        <button type="button" className="submit-btn" onClick={handleSubmit}>
-          Submit and view your full comparison analysis
+        <button type="button" className="btn-compare" onClick={processComparison}>
+          執行比較
         </button>
 
-        {submitted && (
-          <div id="result-section" ref={resultRef}>
-            <div className="result-title">Your personalized assessment and recommendations</div>
-            <p style={{ fontSize: '15px', marginBottom: '25px' }}>
-              The system uses your <strong>net worth tier</strong> as the baseline and compares each part
-              of your mindset against what best fits your current asset stage.
-            </p>
-
-            <FeedbackCard
-              title="Daily freedom comparison"
-              {...computeFeedback(
-                q1,
-                answers.q2 ?? 0,
-                textQ2,
-                'Your lifestyle quality or mindset may still be stuck in the fear of an earlier stage. Loosen your grip a little, learn to enjoy the wealth you worked hard to build, and stop overreacting to minor everyday costs.',
-                'Your spending freedom is ahead of your asset level. Be careful that lifestyle inflation is not outrunning asset growth, or your finances may become fragile.',
-                'Your sense of control over daily life fits your asset scale well. Keep maintaining this healthy spending mindset.'
-              )}
-            />
-
-            <FeedbackCard
-              title="Main mission comparison"
-              {...computeFeedback(
-                q1,
-                answers.q3 ?? 0,
-                textQ3,
-                'You may still be spending energy on tasks from a previous stage. That can keep you stuck. Update your strategy and focus on what matters most at your current level.',
-                'You may be trying to skip levels. Chasing leverage or large-scale impact too early, without a solid base, can expose you to unnecessary risk.',
-                'You are highly clear on the most important task for this stage, which helps you move forward efficiently.'
-              )}
-            />
-
-            <FeedbackCard
-              title="Spending mindset comparison"
-              {...computeFeedback(
-                q1,
-                answers.q4 ?? 0,
-                textQ4,
-                'You may still feel guilty about small amounts that no longer deserve that level of anxiety. Many people get stuck after their assets grow because old scarcity habits still control them. Relax everyday spending tolerance and save your energy for bigger decisions.',
-                'For your current asset base, this spending habit may be too inflated. Tighten it slightly and avoid using a higher-tier standard to justify current expenses.',
-                'You have a precise feel for what counts as a big expense and what does not, which supports rational spending without unnecessary anxiety.'
-              )}
-            />
-
-            <FeedbackCard
-              title="Income and time comparison"
-              {...computeFeedback(
-                q1,
-                answers.q5 ?? 0,
-                textQ5,
-                'The value of your time has already risen, but you may still be trading cheap hours for too little return. Old methods will not carry you into a new tier. Reject low-efficiency income and look for leverage.',
-                'You may be aiming too high too soon. At your current asset stage, smaller opportunities can still make a meaningful contribution to your capital base, so do not dismiss them prematurely.',
-                'You understand your opportunity cost well. You do not overwork for small money, but you also do not miss income that is still worth capturing.'
-              )}
-            />
-
-            <div className="result-item" style={{ borderLeft: '4px solid var(--accent-color)' }}>
-              <div className="result-item-title" style={{ border: 'none', marginBottom: '5px' }}>
-                Overall fulfillment and wealth assessment
+        {isProcessed && (
+          <div id="result-section">
+            <div className="stats-panel" ref={statsRef}>
+              <div className="stat-item stat-total">
+                總計處理格數
+                <div className="stat-value">{stats.total}</div>
               </div>
-              <div style={{ fontSize: '14.5px', color: '#444', lineHeight: '1.8' }}>
-                {avgH < 3 ? (
-                  <>
-                    <span className="status-lag">🚨 Lower fulfillment score (total {totalHappiness}/25)</span>
-                    <br />
-                    Your health, relationships, or time freedom may be in a depleted state. If life already feels empty or isolated, more money will only magnify the problem. Strongly consider slowing down and stop sacrificing health or relationships for income.
-                  </>
-                ) : avgH < 4.2 ? (
-                  <>
-                    <span className="status-lead">⚖️ Mid-range fulfillment score (total {totalHappiness}/25)</span>
-                    <br />
-                    Your life is in dynamic balance, but one or two invisible dimensions may still be undernourished. Review whether any single area scored below 3. Improving that area may create more happiness than increasing the number on paper.
-                  </>
-                ) : (
-                  <>
-                    <span className="status-match">🌟 Excellent fulfillment score (total {totalHappiness}/25)</span>
-                    <br />
-                    Congratulations. You are not just accumulating numbers on paper. You are also protecting the social, psychological, physical, and time wealth that makes life genuinely rich.
-                  </>
-                )}
+              <div className="stat-item stat-identical">
+                ✅ 內容相同
+                <div className="stat-value">
+                  {stats.identical} ({pct(stats.identical)})
+                </div>
+              </div>
+              <div className="stat-item stat-changed">
+                ⚠️ 內容修改
+                <div className="stat-value">
+                  {stats.changed} ({pct(stats.changed)})
+                </div>
+              </div>
+              <div className="stat-item stat-added">
+                ➕ 新增資料
+                <div className="stat-value">
+                  {stats.added} ({pct(stats.added)})
+                </div>
+              </div>
+              <div className="stat-item stat-removed">
+                ➖ 刪除資料
+                <div className="stat-value">
+                  {stats.removed} ({pct(stats.removed)})
+                </div>
               </div>
             </div>
 
-            <br />
-            <SocialShare title={siteTitle} text={shareText} description={shareModuleDescription} />
+            <div className="pagination-container">
+              <button
+                type="button"
+                className="btn-page"
+                onClick={() => goToPage(1)}
+                disabled={currentPage === 1}
+              >
+                |◀
+              </button>
+              <button
+                type="button"
+                className="btn-page"
+                onClick={() => changePage(-1)}
+                disabled={currentPage === 1}
+              >
+                ◀ 上一頁
+              </button>
+              {pageNumbers.map((page) => (
+                <button
+                  type="button"
+                  key={page}
+                  className={`btn-page ${page === currentPage ? 'active-page' : ''}`}
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="btn-page"
+                onClick={() => changePage(1)}
+                disabled={currentPage === totalPages}
+              >
+                下一頁 ▶
+              </button>
+              <button
+                type="button"
+                className="btn-page"
+                onClick={() => goToPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                ▶|
+              </button>
+              <span className="page-info">
+                第 {currentPage} / {totalPages} 頁 (每頁 {ROWS_PER_PAGE} 筆 / 共 {totalRows} 筆)
+              </span>
+            </div>
+
+            <div className="result-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th className="index-head">#</th>
+                    {globalHeaders.map((header, colIndex) => {
+                      const structuralClass = !headers1.includes(header)
+                        ? 'diff-added'
+                        : !headers2.includes(header)
+                          ? 'diff-removed'
+                          : '';
+                      const ignoredClass = ignoredCols.has(colIndex) ? 'ignored-col' : '';
+                      return (
+                        <th
+                          key={`${header}-${colIndex}`}
+                          data-col={colIndex}
+                          className={`${structuralClass} ${ignoredClass}`.trim()}
+                          title="點擊忽略此欄"
+                          onClick={() => toggleColumn(colIndex)}
+                        >
+                          {header}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageData.map((row) => {
+                    const rowIgnored = ignoredRows.has(row.rowIndex);
+                    return (
+                      <tr
+                        key={row.rowIndex}
+                        className={rowIgnored ? 'ignored-row' : ''}
+                        data-row={row.rowIndex}
+                      >
+                        <th
+                          className="row-index"
+                          title="點擊忽略此列"
+                          onClick={() => toggleRow(row.rowIndex)}
+                        >
+                          {row.rowIndex + 1}
+                        </th>
+                        {row.cells.map((cell) => {
+                          const cellId = `${row.rowIndex}-${cell.colIndex}`;
+                          const ignoredCellClass = ignoredCells.has(cellId) ? 'ignored-cell' : '';
+                          const ignoredColClass = ignoredCols.has(cell.colIndex) ? 'ignored-col' : '';
+
+                          const statusClass =
+                            cell.status === 'added'
+                              ? 'diff-added'
+                              : cell.status === 'removed'
+                                ? 'diff-removed'
+                                : cell.status === 'changed'
+                                  ? 'diff-changed'
+                                  : '';
+
+                          return (
+                            <td
+                              key={cellId}
+                              data-row={row.rowIndex}
+                              data-col={cell.colIndex}
+                              className={`${statusClass} ${ignoredCellClass} ${ignoredColClass}`.trim()}
+                              onClick={() => toggleCell(row.rowIndex, cell.colIndex)}
+                            >
+                              {cell.status === 'changed' ? (
+                                <>
+                                  <span className="text-removed">{cell.val1}</span>
+                                  <br />
+                                  <span className="text-added">{cell.val2}</span>
+                                </>
+                              ) : (
+                                cell.val2 || cell.val1
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="pagination-container">
+              <button
+                type="button"
+                className="btn-page"
+                onClick={() => goToPage(1)}
+                disabled={currentPage === 1}
+              >
+                |◀
+              </button>
+              <button
+                type="button"
+                className="btn-page"
+                onClick={() => changePage(-1)}
+                disabled={currentPage === 1}
+              >
+                ◀ 上一頁
+              </button>
+              {pageNumbers.map((page) => (
+                <button
+                  type="button"
+                  key={`bottom-${page}`}
+                  className={`btn-page ${page === currentPage ? 'active-page' : ''}`}
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="btn-page"
+                onClick={() => changePage(1)}
+                disabled={currentPage === totalPages}
+              >
+                下一頁 ▶
+              </button>
+              <button
+                type="button"
+                className="btn-page"
+                onClick={() => goToPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                ▶|
+              </button>
+              <span className="page-info">
+                第 {currentPage} / {totalPages} 頁 (每頁 {ROWS_PER_PAGE} 筆 / 共 {totalRows} 筆)
+              </span>
+            </div>
           </div>
         )}
       </div>

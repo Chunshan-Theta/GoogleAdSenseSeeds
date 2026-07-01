@@ -17,6 +17,7 @@ interface ComparisonRow {
 }
 
 const ROWS_PER_PAGE = 250;
+const PAGE_WINDOW_SIZE = 5;
 
 export default function Home() {
   const [text1, setText1] = useState('');
@@ -227,14 +228,17 @@ export default function Home() {
 
   const pageNumbers = useMemo(() => {
     let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, startPage + 4);
+    let endPage = Math.min(totalPages, startPage + (PAGE_WINDOW_SIZE - 1));
 
-    if (endPage - startPage < 4) {
-      startPage = Math.max(1, endPage - 4);
+    if (endPage - startPage < PAGE_WINDOW_SIZE - 1) {
+      startPage = Math.max(1, endPage - (PAGE_WINDOW_SIZE - 1));
     }
 
     return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
   }, [currentPage, totalPages]);
+
+  const headerSet1 = useMemo(() => new Set(headers1), [headers1]);
+  const headerSet2 = useMemo(() => new Set(headers2), [headers2]);
 
   return (
     <>
@@ -384,9 +388,9 @@ export default function Home() {
                   <tr>
                     <th className="index-head">#</th>
                     {globalHeaders.map((header, colIndex) => {
-                      const structuralClass = !headers1.includes(header)
+                      const structuralClass = !headerSet1.has(header)
                         ? 'diff-added'
-                        : !headers2.includes(header)
+                        : !headerSet2.has(header)
                           ? 'diff-removed'
                           : '';
                       const ignoredClass = ignoredCols.has(colIndex) ? 'ignored-col' : '';

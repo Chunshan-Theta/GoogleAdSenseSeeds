@@ -13,6 +13,7 @@ interface ComparisonCell {
 
 interface ComparisonRow {
   rowIndex: number;
+  pkDisplay: string;
   cells: ComparisonCell[];
 }
 
@@ -22,6 +23,7 @@ const PAGE_WINDOW_SIZE = 5;
 export default function Home() {
   const [text1, setText1] = useState('');
   const [text2, setText2] = useState('');
+  const [selectedPK, setSelectedPK] = useState('');
   const [headers1, setHeaders1] = useState<string[]>([]);
   const [headers2, setHeaders2] = useState<string[]>([]);
   const [globalHeaders, setGlobalHeaders] = useState<string[]>([]);
@@ -32,6 +34,24 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isProcessed, setIsProcessed] = useState(false);
   const statsRef = useRef<HTMLDivElement>(null);
+
+  const pkHeaders = useMemo(() => {
+    const parseConfig = { preview: 1, header: true };
+    const headers = new Set<string>();
+    try {
+      if (text1.trim()) {
+        const p = Papa.parse<Record<string, string>>(text1.trim(), parseConfig);
+        p.meta.fields?.forEach((f) => headers.add(f));
+      }
+      if (text2.trim()) {
+        const p = Papa.parse<Record<string, string>>(text2.trim(), parseConfig);
+        p.meta.fields?.forEach((f) => headers.add(f));
+      }
+    } catch {
+      // ignore parse errors during header preview
+    }
+    return Array.from(headers);
+  }, [text1, text2]);
 
   const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || 'CSV 比對工具 (分頁與統計版)';
   const siteDesc =
@@ -77,15 +97,14 @@ export default function Home() {
 
     const data1 = parsed1.data;
     const data2 = parsed2.data;
-    const maxRows = Math.max(data1.length, data2.length);
 
     const nextComparisonData: ComparisonRow[] = [];
 
-    for (let i = 0; i < maxRows; i += 1) {
-      const row1 = data1[i] || {};
-      const row2 = data2[i] || {};
-
-      const cells = mergedHeaders.map((header, colIndex) => {
+    const buildCells = (
+      row1: Record<string, string>,
+      row2: Record<string, string>
+    ): ComparisonCell[] =>
+      mergedHeaders.map((header, colIndex) => {
         const raw1 = row1[header];
         const raw2 = row2[header];
         const val1 = typeof raw1 === 'string' ? raw1.trim() : '';
@@ -107,7 +126,46 @@ export default function Home() {
         return { colIndex, status, val1, val2 };
       });
 
-      nextComparisonData.push({ rowIndex: i, cells });
+    if (selectedPK) {
+      const map1 = new Map<string, Record<string, string>>();
+      const map2 = new Map<string, Record<string, string>>();
+      const allPKs: string[] = [];
+      const seenPKs = new Set<string>();
+
+      const addToIndex = (key: string) => {
+        if (!seenPKs.has(key)) {
+          seenPKs.add(key);
+          allPKs.push(key);
+        }
+      };
+
+      data1.forEach((row) => {
+        const key = row[selectedPK]?.trim();
+        if (key) {
+          map1.set(key, row);
+          addToIndex(key);
+        }
+      });
+      data2.forEach((row) => {
+        const key = row[selectedPK]?.trim();
+        if (key) {
+          map2.set(key, row);
+          addToIndex(key);
+        }
+      });
+
+      allPKs.forEach((pkValue, idx) => {
+        const row1 = map1.get(pkValue) || {};
+        const row2 = map2.get(pkValue) || {};
+        nextComparisonData.push({ rowIndex: idx, pkDisplay: pkValue, cells: buildCells(row1, row2) });
+      });
+    } else {
+      const maxRows = Math.max(data1.length, data2.length);
+      for (let i = 0; i < maxRows; i += 1) {
+        const row1 = data1[i] || {};
+        const row2 = data2[i] || {};
+        nextComparisonData.push({ rowIndex: i, pkDisplay: String(i + 1), cells: buildCells(row1, row2) });
+      }
     }
 
     setHeaders1(fields1);
@@ -260,6 +318,9 @@ export default function Home() {
           <h3>📖 工具功能說明</h3>
           <ul>
             <li>
+              <strong>設定 Primary Key (防順序調換)：</strong>在比對前，可透過下拉選單選擇一個唯一值欄位（如 ID）。設定後，即使兩份檔案資料列順序不同，也能精準配對，不被誤判為修改。
+            </li>
+            <li>
               <strong>本地安全執行：</strong>所有資料都在您的瀏覽器內處理，不上傳任何伺服器，確保機密資料不外洩。
             </li>
             <li>
@@ -274,7 +335,7 @@ export default function Home() {
           </ul>
         </div>
 
-        <h1>CSV 比對工具 (分頁與統計版)</h1>
+        <h1>CSV 比對工具 (支援 Primary Key 與分頁)</h1>
 
         <div className="compare-inputs">
           <div className="box">
@@ -295,6 +356,22 @@ export default function Home() {
               placeholder="或直接貼上含標題的 CSV..."
             />
           </div>
+        </div>
+
+        <div className="pk-selector">
+          <label htmlFor="pk-select">🔑 選擇 Primary Key (對齊資料依據)：</label>
+          <select
+            id="pk-select"
+            value={selectedPK}
+            onChange={(e) => setSelectedPK(e.target.value)}
+          >
+            <option value="">-- 不使用 (依行號順序比對) --</option>
+            {pkHeaders.map((h) => (
+              <option key={h} value={h}>
+                {h}
+              </option>
+            ))}
+          </select>
         </div>
 
         <button type="button" className="btn-compare" onClick={processComparison}>
@@ -386,7 +463,7 @@ export default function Home() {
               <table>
                 <thead>
                   <tr>
-                    <th className="index-head">#</th>
+                    <th className="index-head">{selectedPK ? `🔑 ${selectedPK}` : '#'}</th>
                     {globalHeaders.map((header, colIndex) => {
                       const structuralClass = !headerSet1.has(header)
                         ? 'diff-added'
@@ -422,7 +499,7 @@ export default function Home() {
                           title="點擊忽略此列"
                           onClick={() => toggleRow(row.rowIndex)}
                         >
-                          {row.rowIndex + 1}
+                          {row.pkDisplay}
                         </th>
                         {row.cells.map((cell) => {
                           const cellId = `${row.rowIndex}-${cell.colIndex}`;

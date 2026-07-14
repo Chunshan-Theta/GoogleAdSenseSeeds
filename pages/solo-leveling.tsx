@@ -19,7 +19,7 @@ const MORTGAGE_MONTHS = 240; // 20-year mortgage (20 × 12)
 
 const jobs: Job[] = [
   { name: '勞工 - 外送/便利店', salary: 480000 },
-  { name: '吸引力 - 展場/公關/八大', salary: 800000 },
+  { name: '吸引力 - 展場/主持', salary: 800000 },
   { name: '時間 - 遠洋/24h看護', salary: 1200000 },
   { name: '專業 - 軟硬體工程/管理職', salary: 1500000 },
   { name: '高階 - 醫師/自營商', salary: 3000000 },
@@ -70,7 +70,7 @@ const matrixDB: RegionData[] = [
   },
 ];
 
-const TARGETS = [1000000, 3000000, 5000000, 8000000, 10000000, 15000000, 20000000];
+const TARGETS = [1000000, 3000000, 5000000, 8000000, 10000000, 15000000, 20000000, 30000000, 50000000, 100000000];
 
 type LevelClass = 'level-high' | 'level-mid' | 'level-low' | 'level-none';
 interface LevelInfo { cls: LevelClass; label: string; desc: string; cost: number; }

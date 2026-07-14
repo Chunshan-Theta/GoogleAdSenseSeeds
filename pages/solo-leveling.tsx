@@ -206,7 +206,6 @@ export default function FireCalculator() {
           .form-group input, .form-group select { padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 1rem; }
           .fire-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; table-layout: fixed; min-width: 900px; }
           .fire-table th, .fire-table td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
-          .fire-table th { background: #f1f5f9; }
           .highlight { color: #16a34a; font-weight: bold; }
           .warning { color: #dc2626; font-weight: bold; }
           .surplus-pos { color: #16a34a; font-weight: 700; font-size: 0.85rem; }

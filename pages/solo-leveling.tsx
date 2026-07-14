@@ -13,6 +13,10 @@ interface RegionData {
   life: Tier3<CostTier>;
 }
 
+const RETIREMENT_AGE = 60;
+const SAFE_WITHDRAWAL_RATE = 0.04;
+const MORTGAGE_MONTHS = 240; // 20-year mortgage (20 × 12)
+
 const jobs: Job[] = [
   { name: '勞工 - 外送/便利店', salary: 480000 },
   { name: '吸引力 - 展場/公關/八大', salary: 800000 },
@@ -134,9 +138,9 @@ export default function FireCalculator() {
         ? target / annualSaving
         : Math.log((target * ROR) / annualSaving + 1) / Math.log(1 + ROR);
       const targetAge = currentAge + yearsToTarget;
-      if (targetAge > 60) return { target, yearsToTarget, targetAge, fv: 0, monthlyBudget: 0, reachable: false };
-      const fv = ROR === 0 ? target : target * Math.pow(1 + ROR, 60 - targetAge);
-      const monthlyBudget = (fv * 0.04) / 12;
+      if (targetAge > RETIREMENT_AGE) return { target, yearsToTarget, targetAge, fv: 0, monthlyBudget: 0, reachable: false };
+      const fv = ROR === 0 ? target : target * Math.pow(1 + ROR, RETIREMENT_AGE - targetAge);
+      const monthlyBudget = (fv * SAFE_WITHDRAWAL_RATE) / 12;
       return { target, yearsToTarget, targetAge, fv, monthlyBudget, reachable: true };
     });
   }, [currentAge, annualSaving, ROR]);
@@ -151,25 +155,25 @@ export default function FireCalculator() {
   // Section 3: matrix
   const totalBudget = currentBudgets[targetSelect.toString()] || 0;
   const bHousing = totalBudget * (ratioHousing / 100);
-  const bHousingEffective = housingMode === 'buy' ? bHousing * 12 * 20 : bHousing;
+  const bHousingEffective = housingMode === 'buy' ? bHousing * MORTGAGE_MONTHS : bHousing;
   const bFood = totalBudget * (ratioFood / 100);
   const bTrans = totalBudget * (ratioTrans / 100);
   const bLife = totalBudget * (ratioLife / 100);
 
   // Section 4: coast FIRE
   const coastFireRows = useMemo(() => {
-    const totalYears = 60 - currentAge;
-    if (annualSaving <= 0 || currentAge >= 60 || ROR <= 0) return null;
+    const totalYears = RETIREMENT_AGE - currentAge;
+    if (annualSaving <= 0 || currentAge >= RETIREMENT_AGE || ROR <= 0) return null;
     return matrixDB.map(row => {
       const tiers = ['low', 'mid', 'high'] as const;
       return {
         region: row.region,
         tiers: tiers.map(tier => {
           const housingCostMonthly = housingMode === 'buy'
-            ? row.housing[tier].buy / 240
+            ? row.housing[tier].buy / MORTGAGE_MONTHS
             : row.housing[tier].rent;
           const monthlyNeeded = housingCostMonthly + row.food[tier].cost + row.trans[tier].cost + row.life[tier].cost;
-          const fvNeeded = (monthlyNeeded * 12) / 0.04;
+          const fvNeeded = (monthlyNeeded * 12) / SAFE_WITHDRAWAL_RATE;
           const K = (fvNeeded * ROR) / (annualSaving * Math.pow(1 + ROR, totalYears));
           if (K >= 1) return { type: 'impossible' as const };
           const N = -Math.log(1 - K) / Math.log(1 + ROR);

@@ -166,6 +166,41 @@ export default function FireCalculator() {
   const bTrans = totalBudget * (ratioTrans / 100);
   const bLife = totalBudget * (ratioLife / 100);
 
+  // --- 處理第三節段資料複製 ---
+  const handleCopyData = () => {
+    if (totalBudget === 0) {
+      alert("目前無預算資料可複製");
+      return;
+    }
+    
+    let text = `【FIRE 預算與生活品質分析報告】\n`;
+    text += `模擬目標資產: ${targetSelect / 10000} 萬\n`;
+    text += `居住模式: ${housingMode === 'buy' ? '購置房產' : '長期租屋'}\n`;
+    text += `總預算/月: $${Math.round(totalBudget).toLocaleString()}\n`;
+    text += `預算佔比設定 - 住: ${ratioHousing}% | 食衣: ${ratioFood}% | 行: ${ratioTrans}% | 育樂: ${ratioLife}%\n`;
+    text += `------------------------\n\n`;
+
+    matrixDB.forEach(row => {
+      const hInfo = getLevelInfo(bHousingEffective, row.housing, housingMode === 'buy');
+      const fInfo = getLevelInfo(bFood, row.food, false);
+      const tInfo = getLevelInfo(bTrans, row.trans, false);
+      const lInfo = getLevelInfo(bLife, row.life, false);
+
+      text += `[${row.region}]\n`;
+      text += `- 居住 (${hInfo.label}): 花費 $${hInfo.cost.toLocaleString()} - ${hInfo.desc}\n`;
+      text += `- 食衣 (${fInfo.label}): 花費 $${fInfo.cost.toLocaleString()} - ${fInfo.desc}\n`;
+      text += `- 交通 (${tInfo.label}): 花費 $${tInfo.cost.toLocaleString()} - ${tInfo.desc}\n`;
+      text += `- 育樂 (${lInfo.label}): 花費 $${lInfo.cost.toLocaleString()} - ${lInfo.desc}\n\n`;
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+      alert('已複製分析資料！可直接貼上至其他 AI 進行後續分析。');
+    }).catch(err => {
+      console.error('複製失敗:', err);
+      alert('複製失敗，請確認瀏覽器權限。');
+    });
+  };
+
   // Section 4: Coast FIRE 停止儲蓄精算連動
   const coastFireRows = useMemo(() => {
     const totalYears = RETIREMENT_AGE - currentAge;
@@ -242,6 +277,8 @@ export default function FireCalculator() {
           .ratio-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
           .ratio-grid > div { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; font-weight: 600; }
           .ratio-grid input { padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 1rem; }
+          .copy-btn { margin-left: 12px; padding: 4px 12px; font-size: 0.85rem; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; vertical-align: middle; transition: background-color 0.2s; }
+          .copy-btn:hover { background-color: #2563eb; }
         `}</style>
       </Head>
 
@@ -320,7 +357,10 @@ export default function FireCalculator() {
 
         {/* Section 3: Budget Matrix */}
         <div className="card">
-          <h2>3. 預算分配與生活品質對應矩陣</h2>
+          <h2>
+            3. 預算分配與生活品質對應矩陣
+            <button onClick={handleCopyData} className="copy-btn">📋 複製給 AI 分析</button>
+          </h2>
           <div className="form-group">
             <label>
               生活預算佔比分配 (總和須為 100%)&nbsp;

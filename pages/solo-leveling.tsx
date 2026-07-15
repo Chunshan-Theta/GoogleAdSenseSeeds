@@ -175,14 +175,24 @@ export default function FireCalculator() {
       return {
         region: row.region,
         tiers: tiers.map(tier => {
-          const housingCostMonthly = housingMode === 'buy'
-            ? row.housing[tier].buy / retirementMonths
-            : row.housing[tier].rent;
-          const monthlyNeeded = housingCostMonthly + row.food[tier].cost + row.trans[tier].cost + row.life[tier].cost;
+          // 獨立計算按月支付的日常開銷（含租金）
+          const monthlyLivingCost = 
+            (housingMode === 'rent' ? row.housing[tier].rent : 0) + 
+            row.food[tier].cost + 
+            row.trans[tier].cost + 
+            row.life[tier].cost;
           
-          // 反推退休時點所需的總資產現值 (PV of Annuity)
           const monthlyRate = ROR / 12;
-          const fvNeeded = (monthlyNeeded * (1 - Math.pow(1 + monthlyRate, -retirementMonths))) / monthlyRate;
+          
+          // 1. 日常開銷年金現值 (PV of Annuity)
+          let fvNeeded = monthlyRate === 0 
+            ? monthlyLivingCost * retirementMonths 
+            : (monthlyLivingCost * (1 - Math.pow(1 + monthlyRate, -retirementMonths))) / monthlyRate;
+
+          // 2. 購屋買斷總價直接疊加，不參與退休後折現
+          if (housingMode === 'buy') {
+            fvNeeded += row.housing[tier].buy;
+          }
           
           const K = (fvNeeded * ROR) / (annualSaving * Math.pow(1 + ROR, totalYears));
           if (K >= 1) return { type: 'impossible' as const };
@@ -415,7 +425,7 @@ export default function FireCalculator() {
                           <span className="age-stop">{tier.stopAge.toFixed(1)} 歲</span>
                           <span className="coast-data">
                             停止時本金: {Math.round(tier.principalAtStop / 10000).toLocaleString()} 萬<br />
-                            60歲時複利: {Math.round(tier.fvNeeded / 10000).toLocaleString()} 萬
+                            60歲時總需資產: {Math.round(tier.fvNeeded / 10000).toLocaleString()} 萬
                           </span>
                         </>
                       )}

@@ -125,7 +125,7 @@ export default function FireCalculator() {
   const [housingMode, setHousingMode] = useState<'rent' | 'buy'>('rent');
   const [targetSelect, setTargetSelect] = useState(5000000);
 
-  const MORTGAGE_MONTHS = Math.max((finalAge - RETIREMENT_AGE) * 12, 0);
+  const mortgageMonths = Math.max((finalAge - RETIREMENT_AGE) * 12, 0);
   const annualSaving = annualSalary * (savingRate / 100);
   const ROR = ror / 100;
   const ratioSum = ratioHousing + ratioFood + ratioTrans + ratioLife;
@@ -155,7 +155,7 @@ export default function FireCalculator() {
   // Section 3: matrix
   const totalBudget = currentBudgets[targetSelect.toString()] || 0;
   const bHousing = totalBudget * (ratioHousing / 100);
-  const bHousingEffective = housingMode === 'buy' ? bHousing * MORTGAGE_MONTHS : bHousing;
+  const bHousingEffective = housingMode === 'buy' ? bHousing * mortgageMonths : bHousing;
   const bFood = totalBudget * (ratioFood / 100);
   const bTrans = totalBudget * (ratioTrans / 100);
   const bLife = totalBudget * (ratioLife / 100);
@@ -169,8 +169,9 @@ export default function FireCalculator() {
       return {
         region: row.region,
         tiers: tiers.map(tier => {
+          if (housingMode === 'buy' && mortgageMonths <= 0) return { type: 'impossible' as const };
           const housingCostMonthly = housingMode === 'buy'
-            ? (MORTGAGE_MONTHS > 0 ? row.housing[tier].buy / MORTGAGE_MONTHS : Number.POSITIVE_INFINITY)
+            ? row.housing[tier].buy / mortgageMonths
             : row.housing[tier].rent;
           const monthlyNeeded = housingCostMonthly + row.food[tier].cost + row.trans[tier].cost + row.life[tier].cost;
           const fvNeeded = (monthlyNeeded * 12) / SAFE_WITHDRAWAL_RATE;
@@ -185,7 +186,7 @@ export default function FireCalculator() {
         }),
       };
     });
-  }, [currentAge, annualSaving, ROR, housingMode, MORTGAGE_MONTHS, SAFE_WITHDRAWAL_RATE]);
+  }, [currentAge, annualSaving, ROR, housingMode, mortgageMonths, SAFE_WITHDRAWAL_RATE]);
 
   return (
     <>

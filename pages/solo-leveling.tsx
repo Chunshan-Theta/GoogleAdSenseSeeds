@@ -112,8 +112,7 @@ function BudgetCell({ title, budget, info }: { title: string; budget: number; in
 
 export default function FireCalculator() {
   const [RETIREMENT_AGE, setRETIREMENT_AGE] = useState(60);
-  const [SAFE_WITHDRAWAL_RATE, setSAFE_WITHDRAWAL_RATE] = useState(0.04);
-  const [finalAge, setFinalAge] = useState(80); // 20-year mortgage (20 × 12)
+  const [finalAge, setFinalAge] = useState(80); 
   const [currentAge, setCurrentAge] = useState(25);
   const [savingRate, setSavingRate] = useState(50);
   const [ror, setRor] = useState(5);
@@ -125,12 +124,13 @@ export default function FireCalculator() {
   const [housingMode, setHousingMode] = useState<'rent' | 'buy'>('rent');
   const [targetSelect, setTargetSelect] = useState(5000000);
 
-  const MORTGAGE_MONTHS = (finalAge-RETIREMENT_AGE) * 12;
+  // 核心動態重構：退休存活總月數
+  const retirementMonths = Math.max((finalAge - RETIREMENT_AGE) * 12, 1);
   const annualSaving = annualSalary * (savingRate / 100);
   const ROR = ror / 100;
   const ratioSum = ratioHousing + ratioFood + ratioTrans + ratioLife;
 
-  // Section 2: target accumulation results
+  // Section 2: 導入平準年金公式動態推算月預算
   const calcResults = useMemo(() => {
     if (annualSaving <= 0) return [];
     return TARGETS.map(target => {
@@ -139,28 +139,34 @@ export default function FireCalculator() {
         : Math.log((target * ROR) / annualSaving + 1) / Math.log(1 + ROR);
       const targetAge = currentAge + yearsToTarget;
       if (targetAge > RETIREMENT_AGE) return { target, yearsToTarget, targetAge, fv: 0, monthlyBudget: 0, reachable: false };
+      
       const fv = ROR === 0 ? target : target * Math.pow(1 + ROR, RETIREMENT_AGE - targetAge);
-      const monthlyBudget = (fv * SAFE_WITHDRAWAL_RATE) / 12;
+      
+      // 平準年金提領公式 (PMT)
+      const monthlyRate = ROR / 12;
+      const monthlyBudget = monthlyRate === 0
+        ? fv / retirementMonths
+        : (fv * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -retirementMonths));
+
       return { target, yearsToTarget, targetAge, fv, monthlyBudget, reachable: true };
     });
-  }, [currentAge, annualSaving, ROR]);
+  }, [currentAge, annualSaving, ROR, RETIREMENT_AGE, retirementMonths]);
 
-  // Current budgets map (target -> monthlyBudget)
   const currentBudgets = useMemo(() => {
     const map: Record<string, number> = {};
     calcResults.forEach(r => { map[r.target.toString()] = r.reachable ? r.monthlyBudget : 0; });
     return map;
   }, [calcResults]);
 
-  // Section 3: matrix
+  // Section 3: 矩陣預算分配
   const totalBudget = currentBudgets[targetSelect.toString()] || 0;
   const bHousing = totalBudget * (ratioHousing / 100);
-  const bHousingEffective = housingMode === 'buy' ? bHousing * MORTGAGE_MONTHS : bHousing;
+  const bHousingEffective = housingMode === 'buy' ? bHousing * retirementMonths : bHousing;
   const bFood = totalBudget * (ratioFood / 100);
   const bTrans = totalBudget * (ratioTrans / 100);
   const bLife = totalBudget * (ratioLife / 100);
 
-  // Section 4: coast FIRE
+  // Section 4: Coast FIRE 停止儲蓄精算連動
   const coastFireRows = useMemo(() => {
     const totalYears = RETIREMENT_AGE - currentAge;
     if (annualSaving <= 0 || currentAge >= RETIREMENT_AGE || ROR <= 0) return null;
@@ -170,10 +176,14 @@ export default function FireCalculator() {
         region: row.region,
         tiers: tiers.map(tier => {
           const housingCostMonthly = housingMode === 'buy'
-            ? row.housing[tier].buy / MORTGAGE_MONTHS
+            ? row.housing[tier].buy / retirementMonths
             : row.housing[tier].rent;
           const monthlyNeeded = housingCostMonthly + row.food[tier].cost + row.trans[tier].cost + row.life[tier].cost;
-          const fvNeeded = (monthlyNeeded * 12) / SAFE_WITHDRAWAL_RATE;
+          
+          // 反推退休時點所需的總資產現值 (PV of Annuity)
+          const monthlyRate = ROR / 12;
+          const fvNeeded = (monthlyNeeded * (1 - Math.pow(1 + monthlyRate, -retirementMonths))) / monthlyRate;
+          
           const K = (fvNeeded * ROR) / (annualSaving * Math.pow(1 + ROR, totalYears));
           if (K >= 1) return { type: 'impossible' as const };
           const N = -Math.log(1 - K) / Math.log(1 + ROR);
@@ -185,7 +195,7 @@ export default function FireCalculator() {
         }),
       };
     });
-  }, [currentAge, annualSaving, ROR, housingMode]);
+  }, [currentAge, annualSaving, ROR, housingMode, retirementMonths, RETIREMENT_AGE]);
 
   return (
     <>
@@ -274,7 +284,7 @@ export default function FireCalculator() {
                 <th>達成時年齡</th>
                 <th>至60歲複利年數</th>
                 <th>60 歲總資產 (FV)</th>
-                <th>FIRE 月預算 (4%法則)</th>
+                <th>FIRE 月預算 (動態平準年金)</th>
               </tr>
             </thead>
             <tbody>

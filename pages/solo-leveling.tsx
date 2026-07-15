@@ -13,10 +13,6 @@ interface RegionData {
   life: Tier3<CostTier>;
 }
 
-const RETIREMENT_AGE = 60;
-const SAFE_WITHDRAWAL_RATE = 0.04;
-const MORTGAGE_MONTHS = 240; // 20-year mortgage (20 × 12)
-
 const jobs: Job[] = [
   { name: '勞工 - 外送/便利店', salary: 480000 },
   { name: '吸引力 - 展場/主持', salary: 800000 },
@@ -115,6 +111,9 @@ function BudgetCell({ title, budget, info }: { title: string; budget: number; in
 }
 
 export default function FireCalculator() {
+  const [RETIREMENT_AGE, setRETIREMENT_AGE] = useState(60);
+  const [SAFE_WITHDRAWAL_RATE, setSAFE_WITHDRAWAL_RATE] = useState(0.04);
+  const [finalAge, setFinalAge] = useState(80); // 20-year mortgage (20 × 12)
   const [currentAge, setCurrentAge] = useState(25);
   const [savingRate, setSavingRate] = useState(50);
   const [ror, setRor] = useState(5);
@@ -126,6 +125,7 @@ export default function FireCalculator() {
   const [housingMode, setHousingMode] = useState<'rent' | 'buy'>('rent');
   const [targetSelect, setTargetSelect] = useState(5000000);
 
+  const MORTGAGE_MONTHS = (finalAge-RETIREMENT_AGE) * 12;
   const annualSaving = annualSalary * (savingRate / 100);
   const ROR = ror / 100;
   const ratioSum = ratioHousing + ratioFood + ratioTrans + ratioLife;
@@ -311,6 +311,12 @@ export default function FireCalculator() {
               <div>食衣 (%) <input type="number" value={ratioFood} onChange={e => setRatioFood(Number(e.target.value))} /></div>
               <div>行 (%) <input type="number" value={ratioTrans} onChange={e => setRatioTrans(Number(e.target.value))} /></div>
               <div>育樂 (%) <input type="number" value={ratioLife} onChange={e => setRatioLife(Number(e.target.value))} /></div>
+            </div>
+            <label>
+              預期有效存活年齡
+            </label>
+            <div className="ratio-grid">
+              <div>歲數<input type="number" value={finalAge} onChange={e => setFinalAge(Number(e.target.value))} /></div>
             </div>
           </div>
           <div className="grid-2" style={{ marginTop: 15 }}>

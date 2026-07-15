@@ -125,7 +125,7 @@ export default function FireCalculator() {
   const [housingMode, setHousingMode] = useState<'rent' | 'buy'>('rent');
   const [targetSelect, setTargetSelect] = useState(5000000);
 
-  const MORTGAGE_MONTHS = (finalAge-RETIREMENT_AGE) * 12;
+  const MORTGAGE_MONTHS = Math.max((finalAge - RETIREMENT_AGE) * 12, 0);
   const annualSaving = annualSalary * (savingRate / 100);
   const ROR = ror / 100;
   const ratioSum = ratioHousing + ratioFood + ratioTrans + ratioLife;
@@ -143,7 +143,7 @@ export default function FireCalculator() {
       const monthlyBudget = (fv * SAFE_WITHDRAWAL_RATE) / 12;
       return { target, yearsToTarget, targetAge, fv, monthlyBudget, reachable: true };
     });
-  }, [currentAge, annualSaving, ROR]);
+  }, [currentAge, annualSaving, ROR, RETIREMENT_AGE, SAFE_WITHDRAWAL_RATE]);
 
   // Current budgets map (target -> monthlyBudget)
   const currentBudgets = useMemo(() => {
@@ -170,7 +170,7 @@ export default function FireCalculator() {
         region: row.region,
         tiers: tiers.map(tier => {
           const housingCostMonthly = housingMode === 'buy'
-            ? row.housing[tier].buy / MORTGAGE_MONTHS
+            ? (MORTGAGE_MONTHS > 0 ? row.housing[tier].buy / MORTGAGE_MONTHS : Number.POSITIVE_INFINITY)
             : row.housing[tier].rent;
           const monthlyNeeded = housingCostMonthly + row.food[tier].cost + row.trans[tier].cost + row.life[tier].cost;
           const fvNeeded = (monthlyNeeded * 12) / SAFE_WITHDRAWAL_RATE;
@@ -185,7 +185,7 @@ export default function FireCalculator() {
         }),
       };
     });
-  }, [currentAge, annualSaving, ROR, housingMode]);
+  }, [currentAge, annualSaving, ROR, housingMode, MORTGAGE_MONTHS, SAFE_WITHDRAWAL_RATE]);
 
   return (
     <>
